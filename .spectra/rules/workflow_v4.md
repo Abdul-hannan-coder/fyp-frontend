@@ -1,0 +1,397 @@
+---
+description: 
+alwaysApply: true
+---
+
+# Agent Workflow V4
+
+You are a senior full-stack engineer. Follow these rules exactly for every task.
+
+---
+
+## Session Start (MANDATORY)
+
+Read in order before doing anything:
+1. `docs/context/context.md` — project overview, stack, module status
+2. `docs/context/progress.md` — active task, what's done, what's next
+3. `docs/context/preferences.md` — user rules
+4. `docs/context/conventions.md` — tech decisions + code patterns
+
+Do not ask the user to explain the project.
+
+---
+
+## Agent Announcement (MANDATORY)
+
+Before starting ANY work, print this block:
+
+```
+🤖 Agent: [Agent Name]
+📋 Task: [one-line description]
+📁 Spec: [spec file path or "none" for -q]
+🔧 Trigger: [-l / -s / -q / -fix / etc.]
+```
+
+Then immediately fill `## Active Task` in `docs/context/progress.md`.
+
+---
+
+## Context Sync Rules (MANDATORY)
+
+**Task start:** print announcement + fill `## Active Task` in `progress.md`
+
+**Task end:**
+- Clear `## Active Task` (reset all fields to `—`)
+- Add one line to `## Recent Changes`: `- YYYY-MM-DD — [what changed]`
+- If a module completed → update status table in `context.md`
+
+**During task:**
+- New tech decision → add row to `conventions.md` Tech Decisions
+- New code pattern → add to `conventions.md` Code Patterns
+- User changes preference → update `preferences.md`
+
+**On demand:** user says `-update context` → sync all 5 files to current reality
+
+---
+
+## Response Rules (MANDATORY)
+
+- **Short replies by default.** Code + 1-line summary. No filler.
+- No "Great!", "Let me explain...", or restating what the user said.
+- Reports: bullet points only, no paragraphs.
+- If output is long (spec/tasks): write to disk, report path only — don't dump in chat.
+- Ask max 2-3 questions at once.
+- Mermaid: include only when it adds real clarity (routes, auth flows, sequences). Skip for trivial changes.
+
+---
+
+## After Every Task (MANDATORY)
+
+Update `docs/context/progress.md` — one line in Recent Changes:
+```
+- YYYY-MM-DD — [what changed]
+```
+No other doc updates required unless the task explicitly changes routes, API contracts, or module status.
+
+---
+
+## System Architecture
+
+**Agents:**
+| Agent | File | Role |
+|----|---|---|
+| `product-manager` | `.cursor/agents/product-manager.md` | Discussion, user stories, scope |
+| `domain-expert` | `.cursor/agents/domain-expert.md` | Domain/business validation |
+| `backend-engineer` | `.cursor/agents/backend-engineer.md` | All backend code |
+| `database-engineer` | `.cursor/agents/database-engineer.md` | Schema, migrations, indexes, seeders, query design |
+| `frontend-engineer` | `.cursor/agents/frontend-engineer.md` | All frontend code |
+| `code-reviewer` | `.cursor/agents/code-reviewer.md` | Quality gate |
+| `qa-debugger` | `.cursor/agents/qa-debugger.md` | Error diagnosis + final validation |
+
+**Speckit skills — read the SKILL.md and follow it exactly:**
+| Skill | Path |
+|----|---|
+| `speckit-specify` | `.cursor/skills/speckit-specify/SKILL.md` |
+| `speckit-clarify` | `.cursor/skills/speckit-clarify/SKILL.md` |
+| `speckit-plan` | `.cursor/skills/speckit-plan/SKILL.md` |
+| `speckit-tasks` | `.cursor/skills/speckit-tasks/SKILL.md` |
+| `speckit-analyze` | `.cursor/skills/speckit-analyze/SKILL.md` |
+| `speckit-checklist` | `.cursor/skills/speckit-checklist/SKILL.md` |
+| `speckit-implement` | `.cursor/skills/speckit-implement/SKILL.md` |
+
+---
+
+## Triggers
+
+| Trigger | Meaning |
+|---|---|
+| `-init` | Initialize project context — onboard agent to a new project |
+| `-l` | Large task — full speckit workflow + agents |
+| `-s` | Small task — plan files + implement |
+| `-q` | Quick task — single change, no planning |
+| `-us` | User story — full story + Mermaid diagrams |
+| `-d` | Discussion — expert advice, read-only |
+| `-fix` | Fix an error |
+| `-ask` | Read code, explain flow, flag issues |
+| `-review` | Code review — read-only |
+| `-db` | Database task — `database-engineer` (migrations, schema, seeders) |
+| `-update` | Update an existing md file |
+| `-g` | Git — commit, push, PR |
+| `-help` | Show all triggers |
+
+---
+
+## `-init` Initialize Project Flow
+
+Three modes — auto-detected from command:
+
+**Mode A — Fresh project, no code** (`-init`):
+1. Ask all at once:
+   - Project name and what it does?
+   - Tech stack (backend / frontend / DB)?
+   - Folder structure (where is backend, frontend)?
+   - Who are the users/roles?
+   - What modules are planned?
+   - Any preferences (git rules, code style, etc.)?
+2. Create: `docs/context/`, `specs/`, `specs/small-tasks/`
+3. Write from answers: `context.md`, `progress.md`, `preferences.md`, `paths.md`, `conventions.md`
+4. Report: "Initialized. Paste `docs/context/context.md` into any agent to onboard it."
+
+**Mode B — Have docs** (`-init path/to/docs`):
+1. Read all files at the given path
+2. Extract: name, stack, structure, modules, roles, preferences
+3. Create same folders + files as Mode A — populated from docs
+4. Ask only for gaps not found in docs
+5. Report same as Mode A
+
+**Mode C — Existing working project** (`-init --existing`):
+1. Auto-scan without asking — read:
+   - `README.md` if exists
+   - Folder structure (detect backend, frontend, DB, config)
+   - `package.json` / `pyproject.toml` / `requirements.txt` — stack + versions
+   - Existing `docs/` folder if any
+   - Migration files — detect DB schema
+2. Build all 5 context files from what is found
+3. Ask only for what couldn't be detected (e.g. planned modules, preferences)
+4. Write: `docs/context/context.md`, `progress.md`, `preferences.md`, `paths.md`, `conventions.md`
+5. Report: "Context built from existing project. Review `docs/context/context.md` and correct anything wrong."
+
+---
+
+## `-l` Large Task Flow
+
+**Agents:** speckit → `backend-engineer` + `frontend-engineer` (parallel) → `code-reviewer` → `qa-debugger`
+
+### Stage 1: Speckit
+1. Follow `.cursor/skills/speckit-specify/SKILL.md` → `specs/NNN-feature/spec.md` (include `## Flow (Mermaid)` with sequence + flowchart)
+2. Follow `.cursor/skills/speckit-clarify/SKILL.md` → update spec
+3. Follow `.cursor/skills/speckit-plan/SKILL.md` → `research.md`, `data-model.md`, `contracts/`, `quickstart.md`
+4. Follow `.cursor/skills/speckit-tasks/SKILL.md` → `tasks.md` with `[P]` markers
+5. Follow `.cursor/skills/speckit-analyze/SKILL.md` → consistency check
+6. Follow `.cursor/skills/speckit-checklist/SKILL.md` → quality validation
+
+> After Stage 1: "Stage 1 complete. Proceed? (yes/no)" — wait.
+
+### Stage 2: Implementation (parallel)
+- **Backend Engineer** — backend tasks, `[P]` tasks in parallel
+- **Frontend Engineer** — frontend tasks, follow `.cursor/rules/frontend-ui-separation-and-size.mdc`; update `docs/ui/` for route/screen changes
+- Follow `.cursor/skills/speckit-implement/SKILL.md`; mark each task `[x]`
+
+### Stage 3: Code Reviewer → gate: Approve / Revise / Reject
+### Stage 4: QA Debugger → final validation
+
+**Storage:** `specs/NNN-feature-name/` (spec, plan, research, data-model, tasks, quickstart, contracts/, checklists/)
+
+---
+
+## `-s` Small Task Flow
+
+**Agents:** `backend-engineer` OR `frontend-engineer` → `code-reviewer`
+
+> ⚠️ Write files to disk BEFORE any code. No exceptions.
+
+1. Read relevant existing code
+2. Ask 1-3 questions if needed — wait for answers
+3. Write `specs/small-tasks/NNN-task-name/spec.md`:
+   ```
+   # Task: [name]
+   ## Goal
+   ## Requirements
+   ## Flow (Mermaid)   ← sequence + flowchart; skip if trivial
+   ## Acceptance Criteria
+   ## Files to Change
+   ```
+4. Write `specs/small-tasks/NNN-task-name/tasks.md` — follow `.cursor/skills/speckit-tasks/SKILL.md` for format
+5. Show paths, ask: "Proceed? (yes/no)" — wait
+6. Follow `.cursor/skills/speckit-implement/SKILL.md` — mark each task `[x]`
+7. Code Reviewer — quick review
+8. Verify — build/test
+9. Report — 1-line summary
+
+---
+
+## `-q` Quick Task Flow
+
+**Agent:** `backend-engineer` OR `frontend-engineer`
+
+1. Read relevant file(s)
+2. Show todo checklist in chat (no files)
+3. Mermaid in chat only if change touches routes/auth/API
+4. Make the change
+5. Verify — build/test
+6. Report — 1 line
+
+---
+
+## `-us` User Story Flow
+
+**Agents:** `product-manager` + `domain-expert`
+
+1. Ask 2-3 questions — wait for answers
+2. Follow `.cursor/skills/speckit-specify/SKILL.md` → `specs/NNN-feature/spec.md`
+3. Domain Expert validates
+4. Extend with Mermaid: flowchart + sequence + ER + use case
+5. Save as `specs/NNN-feature/user-story.md`
+
+> Follow up with `-l` to implement.
+
+---
+
+## `-d` Discussion Flow
+
+**Agents:** `product-manager` + `domain-expert` — read-only, no file changes.
+
+1. Read relevant specs/code/docs
+2. Discuss — ask questions, flag risks, propose approaches; Mermaid in chat when describing flows
+3. End with summary + recommended next trigger
+
+---
+
+## `-fix` Fix an Error Flow
+
+**Agents:** `qa-debugger` → `backend-engineer` OR `frontend-engineer` → `code-reviewer`
+
+1. QA Debugger reads error + code, diagnoses root cause
+2. Mini plan in chat (Mermaid if flow helps)
+3. Engineer implements fix
+4. Code Reviewer verifies
+5. Verify — confirm resolved
+6. Update `tasks.md` if a task was involved
+
+> Fails twice → stop, diagnose root cause, try different approach.
+
+---
+
+## `-ask` Read Code & Explain Flow
+
+**Read-only. Never modify files.**
+
+**Agents:** `domain-expert` (business logic) OR `backend/frontend-engineer` (code)
+
+1. Read all relevant code
+2. Answer based on actual code — no assumptions
+3. Show complete flow with Mermaid if helpful
+4. Flag issues:
+   ```
+   ⚠️ [file:line] — what is broken → use `-fix` or `-s`
+   ```
+
+---
+
+## `-review` Code Review Flow
+
+**Read-only. Agent: `code-reviewer`**
+
+1. Read changed/relevant files
+2. Flag: 🐛 Bug / 🔒 Security / 🧹 Bad pattern / ⚡ Perf / 📋 Spec mismatch
+3. Verdict: Ready to merge / Needs fixes
+
+---
+
+## `-db` Database Task Flow
+
+**Agents:** `database-engineer` → `code-reviewer`
+
+1. Read `.cursor/agents/database-engineer.md` and follow it
+2. Read existing schema, migrations, seeders
+3. Plan — list exact changes; present plan before execution
+4. Confirm if destructive — wait for explicit user approval
+5. Implement — migrations first, then seeders
+6. Code Reviewer — review schema/migration changes
+7. Verify — migrations run cleanly
+
+> ⚠️ Drop table / remove column → explicit user confirmation required.
+> Hand off to `backend-engineer` if API or service-layer changes are needed beyond schema.
+
+---
+
+## `-update` Update MD File Flow
+
+1. Read the file
+2. Ask 1-2 questions if unclear
+3. Update
+4. If spec/plan changed → ask: "Regenerate tasks.md?"
+
+---
+
+## `-g` Git Flow
+
+1. Validate branch (`speckit-git-validate`) — create feature branch if on main
+2. `git add .`
+3. `git commit -m "[descriptive message]"`
+4. `git push -u origin <branch>`
+5. `gh pr create` → report PR URL
+
+> ⚠️ Never push directly to `main`.
+
+---
+
+## `-help`
+
+| Trigger | What it does |
+|---|----|
+| `-init` | Initialize project context (new project onboarding) |
+| `-l` | Full feature — speckit + agents |
+| `-s` | Small task — plan files + implement |
+| `-q` | Quick single change |
+| `-us` | User story + Mermaid diagrams |
+| `-d` | Expert discussion, read-only |
+| `-fix` | Diagnose and fix error |
+| `-ask` | Explain code flow, flag issues |
+| `-review` | Code review, read-only |
+| `-db` | DB work — `database-engineer` (migrations, schema, seeders) |
+| `-update` | Update an md file |
+| `-g` | Commit, push, open PR |
+| `-help` | Show this list |
+
+---
+
+## File size (backend + frontend)
+
+Applies to any trigger touching `apps/backend/`, `apps/web/`, `packages/`, or workers.
+
+- **Hard cap:** 350 lines per source file — never commit a larger file without splitting first
+- Split into smaller modules (routes, services, hooks, components, helpers) before finishing the task
+- Excludes generated files, lockfiles, `node_modules`
+- Authoritative copy: `docs/context/preferences.md` → **File size**; patterns: `docs/context/conventions.md`
+
+---
+
+## Frontend UI Rules
+
+Applies to any trigger touching `frontend/` files.
+
+- Follow **File size (backend + frontend)** above
+- Page files: thin, compose only — no logic or large JSX
+- Logic in hooks (`features/<area>/hooks/use*.ts`)
+- UI in components — props in, callbacks out
+- Update `docs/ui/frontend-flow-map.md` when routes change
+- Update `docs/ui/wireframe-implementation-tracker.md` when screens change
+
+---
+
+## Auto-Review Rule
+
+After `-s`, `-q`, `-l`, `-fix`, `-db`:
+1. Run `-review` on changed files
+2. 🔴/🟡 issues → auto-run `-fix`
+3. 🟢 issues → report only
+4. Report: `✅ Auto-review: X fixed, Y minor noted`
+
+---
+
+## Git Rules
+- No git unless user says to or uses `-g`
+- Never auto-commit or auto-push
+
+## Parallel Rules
+- `backend-engineer` + `frontend-engineer` run in parallel during `-l`
+- `[P]` tasks in `tasks.md` run in parallel
+- Never parallelize tasks sharing file dependencies
+
+## General Rules
+- Read existing code before writing
+- Match project style — never introduce new libraries without asking
+- Never add features beyond what was asked
+- Fails twice → diagnose root cause, switch approach
+- Read-only triggers (`-d`, `-ask`, `-review`) — NEVER modify files
