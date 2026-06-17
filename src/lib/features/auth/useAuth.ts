@@ -100,6 +100,12 @@ export function useAuth() {
     [dispatch],
   );
 
+  const changePassword = React.useCallback(
+    (input: { current_password: string; new_password: string }) =>
+      authApi.changePassword(input),
+    [],
+  );
+
   const clearError = React.useCallback(() => dispatch({ type: "AUTH_CLEAR_ERROR" }), [dispatch]);
 
   return {
@@ -116,6 +122,7 @@ export function useAuth() {
     resendOtp,
     logout,
     updateProfile,
+    changePassword,
     clearError,
   };
 }

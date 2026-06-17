@@ -46,6 +46,9 @@ export const authApi = {
       d && "user" in d ? d.user : (d as AuthUser),
     ),
 
+  changePassword: (input: { current_password: string; new_password: string }) =>
+    http.post<null>("/auth/change-password", input),
+
   logout: (refreshToken: string | null) =>
     http.post<null>("/auth/logout", { refreshToken }),
 };

@@ -29,3 +29,29 @@ export function useAllocationRequests(status?: string) {
 
   return { requests: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, busyId: busy, review };
 }
+
+// Admin/warden: reserve the room a user selected at signup.
+export function useReserveRoom(onDone?: () => void) {
+  const [busy, setBusy] = React.useState(false);
+
+  const reserve = async (user_id: string) => {
+    setBusy(true);
+    try {
+      const result = await allocationApi.reserve({ user_id });
+      toast.success(
+        result.amount_due != null
+          ? `Room reserved — payment of ${result.amount_due} raised`
+          : "Room reserved",
+      );
+      onDone?.();
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message);
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return { busy, reserve };
+}

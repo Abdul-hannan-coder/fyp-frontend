@@ -22,6 +22,7 @@ export type MealMenu = {
   menu_date: string;
   items?: MenuItem[] | string;
   notes?: string;
+  creator?: { id?: string; full_name?: string };
 };
 
 export type StudentSummary = {
@@ -91,6 +92,8 @@ export const messApi = {
   adminPlans: () => http.get<unknown>("/mess/admin/plans?limit=100").then((d) => unwrapList<MessPlan>(d, "plans")),
   plans: () => http.get<unknown>("/mess/plans?limit=100").then((d) => unwrapList<MessPlan>(d, "plans")),
   menu: () => http.get<unknown>("/mess/menu?limit=100").then((d) => unwrapList<MealMenu>(d, "menus")),
+  menuByDate: (date: string) =>
+    http.get<unknown>(`/mess/menu/by-date/${date}`).then((d) => unwrapList<MealMenu>(d, "menus")),
   myPlan: () => http.get<MessSubscription | null>("/mess/my-plan"),
   billing: () => http.get<unknown>("/mess/billing?limit=100").then((d) => unwrapList<MessBill>(d, "bills")),
   subscribe: (planId: string) => http.post<MessSubscription>(`/mess/subscribe/${planId}`),
@@ -152,7 +155,11 @@ export function useMessPlans(admin = false) {
 
 /** Admin mess hook: daily menu, billing generation + report, and subscriptions. */
 export function useAdminMess() {
-  const menuQ = useAsync(() => messApi.adminMenu(), []);
+  const [menuDate, setMenuDate] = React.useState<string>("");
+  const menuQ = useAsync(
+    () => (menuDate ? messApi.menuByDate(menuDate) : messApi.adminMenu()),
+    [menuDate],
+  );
   const subsQ = useAsync(() => messApi.adminSubscriptions(), []);
   const [reportMonth, setReportMonth] = React.useState<string>("");
   const reportQ = useAsync(() => messApi.billingReport(reportMonth || undefined), [reportMonth]);
@@ -192,6 +199,8 @@ export function useAdminMess() {
     menu: menuQ.data ?? [],
     menuLoading: menuQ.loading,
     menuError: menuQ.error,
+    menuDate,
+    setMenuDate,
     subscriptions: subsQ.data ?? [],
     subsLoading: subsQ.loading,
     subsError: subsQ.error,

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ClipboardCheck, Download, X } from "lucide-react";
+import { Check, ClipboardCheck, Download, History, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -29,8 +29,13 @@ import {
 import { useAsync } from "@/lib/useAsync";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonTable, SkeletonCards } from "@/components/ui/skeleton";
-import { attendanceApi, useAttendanceReport, useLeaveReview } from "@/lib/features/attendance";
-import { studentsApi } from "@/lib/features/students";
+import {
+  attendanceApi,
+  useAttendanceReport,
+  useLeaveReview,
+  useStudentAttendance,
+} from "@/lib/features/attendance";
+import { studentsApi, type StudentRecord } from "@/lib/features/students";
 
 const STATUSES = ["present", "absent", "leave", "medical"] as const;
 
@@ -88,6 +93,7 @@ export default function WardenAttendance() {
             <TabsList className="mb-4">
               <TabsTrigger value="leave">Leave requests</TabsTrigger>
               <TabsTrigger value="attendance">Daily attendance</TabsTrigger>
+              <TabsTrigger value="residents">Residents</TabsTrigger>
             </TabsList>
 
             <TabsContent value="leave">
@@ -158,10 +164,97 @@ export default function WardenAttendance() {
                 </Table>
               )}
             </TabsContent>
+
+            <TabsContent value="residents">
+              <ResidentsTab />
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
     </>
+  );
+}
+
+function ResidentsTab() {
+  const students = useAsync(() => studentsApi.list(), []);
+  const list = students.data ?? [];
+
+  if (students.loading) return <SkeletonTable cols={4} />;
+  if (students.error) return <Empty label={students.error} />;
+  if (list.length === 0) return <Empty label="No residents found." />;
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Resident</TableHead>
+          <TableHead>Roll no.</TableHead>
+          <TableHead>Department</TableHead>
+          <TableHead className="text-right">Action</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {list.map((s) => (
+          <TableRow key={s.id}>
+            <TableCell className="font-medium">{s.user?.full_name ?? "Resident"}</TableCell>
+            <TableCell className="text-muted-foreground">{s.student_id ?? "—"}</TableCell>
+            <TableCell className="text-muted-foreground">{s.department ?? "—"}</TableCell>
+            <TableCell className="text-right">
+              <StudentHistoryDialog student={s} />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function StudentHistoryDialog({ student }: { student: StudentRecord }) {
+  const [open, setOpen] = React.useState(false);
+  const { records, loading, error } = useStudentAttendance(student.id, undefined, open);
+  const name = student.user?.full_name ?? "Resident";
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button variant="outline" size="sm" />}>
+        <History className="size-4" /> View history
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Attendance history · {name}</DialogTitle>
+          <DialogDescription>
+            {student.student_id ? `Roll no. ${student.student_id}` : "Most recent attendance records."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto">
+          {loading ? (
+            <SkeletonTable cols={2} />
+          ) : error ? (
+            <Empty label={error} />
+          ) : records.length === 0 ? (
+            <Empty label="No attendance records for this resident." />
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {records.map((a) => (
+                  <TableRow key={a.id}>
+                    <TableCell className="text-muted-foreground">{String(a.attendance_date).slice(0, 10)}</TableCell>
+                    <TableCell className="text-right"><StatusBadge status={a.status} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+        <DialogFooter showCloseButton />
+      </DialogContent>
+    </Dialog>
   );
 }
 

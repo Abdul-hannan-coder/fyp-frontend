@@ -9,6 +9,8 @@ export type ManagedUser = {
   is_active: boolean;
   is_verified: boolean;
   is_approved: boolean;
+  selected_room_id?: string | null;
+  selectedRoom?: { id: string; room_number: string; base_price?: number; capacity?: number } | null;
   createdAt?: string;
 };
 

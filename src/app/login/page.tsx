@@ -9,14 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CurtainButton } from "@/components/ui/curtain-button";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { AnimatedCharacters } from "@/components/ui/animated-characters-login-page";
 import { useAuth, roleHome } from "@/lib/features/auth/useAuth";
 import { ApiError } from "@/lib/http";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, verifyLoginOtp } = useAuth();
+  const { login, verifyLoginOtp, isAuthenticated, isLoading, role } = useAuth();
   const [step, setStep] = React.useState<"credentials" | "otp">("credentials");
+
+  // Already signed in? Skip the login page and go straight to the dashboard.
+  React.useEffect(() => {
+    if (isAuthenticated) router.replace(roleHome(role));
+  }, [isAuthenticated, role, router]);
   const [show, setShow] = React.useState(false);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -91,6 +104,21 @@ export default function LoginPage() {
       {/* Right panel */}
       <div className="flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-sm">
+          <Breadcrumb className="mb-6">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {isAuthenticated ? (
+                  <BreadcrumbLink render={<Link href={roleHome(role)} />}>Dashboard</BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>Sign in</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
           {step === "credentials" ? (
             <>
               <div className="space-y-2">

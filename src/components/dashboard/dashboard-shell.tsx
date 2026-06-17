@@ -1,5 +1,6 @@
 import { ThemeToggle } from "@/components/dashboard/theme-toggle";
 import { HeaderNotifications } from "@/components/dashboard/header-notifications";
+import { AccountMenu } from "@/components/dashboard/account-menu";
 import { ModernSidebar } from "@/components/ui/modern-side-bar";
 import { ROLE_META, type Role } from "@/lib/nav";
 
@@ -25,6 +26,7 @@ export function DashboardShell({
           <div className="ml-auto flex items-center gap-2">
             <HeaderNotifications />
             <ThemeToggle />
+            <AccountMenu />
           </div>
         </header>
 

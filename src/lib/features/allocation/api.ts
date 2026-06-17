@@ -32,7 +32,18 @@ export const allocationApi = {
     return http.get<unknown>(`/allocations?${p}`).then((d) => unwrapList<Allocation>(d, "allocations"));
   },
   allocate: (body: AllocateInput) => http.post<Allocation>("/allocations", body),
+  // spec 002: admin/warden reserves the room a user already selected at signup.
+  reserve: (body: { user_id: string }) =>
+    http.post<ReservationResult>("/allocations/reserve", body),
   dashboard: () => http.get<Record<string, unknown>>("/allocations/dashboard"),
+};
+
+export type ReservationResult = {
+  reserved: boolean;
+  allocation_id?: string;
+  payment_id?: string;
+  amount_due?: number;
+  reason?: string;
 };
 
 type CreateTransferInput = {

@@ -4,9 +4,17 @@ import type {
   FeeStructure,
   Payment,
   PaymentProof,
+  PaymentSummary,
   RecordPaymentInput,
   Refund,
 } from "./types";
+
+const unwrapProof = (d: unknown): PaymentProof => {
+  if (d && typeof d === "object" && "proof" in d) {
+    return (d as { proof: PaymentProof }).proof;
+  }
+  return d as PaymentProof;
+};
 
 export const feesApi = {
   listPayments: (params: { student_id?: string; status?: string } = {}) => {
@@ -27,6 +35,17 @@ export const feesApi = {
     http
       .get<unknown>(`/fees/payments/${paymentId}/proofs`)
       .then((d) => unwrapList<PaymentProof>(d, "proofs")),
+  // Per-student summary (GET /fees/payments/summary is student-scoped, authorize('student')).
+  paymentsSummary: () => http.get<PaymentSummary>("/fees/payments/summary"),
+  // Admin utility: recompute late fees on overdue payments. Body is unused by the backend.
+  calculateLateFees: () =>
+    http.post<{ count: number }>("/fees/payments/calculate-late-fees", {}),
+  // Approve a payment proof — applies the proof amount to its payment. remarks optional.
+  verifyProof: (proofId: string, body: { remarks?: string } = {}) =>
+    http.patch<unknown>(`/fees/payment-proofs/${proofId}/verify`, body).then(unwrapProof),
+  // Reject a payment proof — remarks (reason) is required by the backend validator.
+  rejectProof: (proofId: string, body: { remarks: string }) =>
+    http.patch<unknown>(`/fees/payment-proofs/${proofId}/reject`, body).then(unwrapProof),
   listStructures: () =>
     http.get<unknown>("/fees/fee-structures?limit=100").then((d) => unwrapList<FeeStructure>(d, "feeStructures")),
   createStructure: (body: {

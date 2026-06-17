@@ -4,7 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { useAsync } from "@/lib/useAsync";
 import { feesApi, refundsApi, downloadPaymentReceipt, type CreateFeeStructureInput } from "./api";
-import type { CreateRefundInput, RecordPaymentInput } from "./types";
+import type { CreateRefundInput, PaymentSummary, RecordPaymentInput } from "./types";
 
 export function useFeeStructures() {
   const q = useAsync(() => feesApi.listStructures(), []);
@@ -101,6 +101,79 @@ export function useMyPayments() {
   };
 
   return { payments: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, submitting, pay, uploadProof, downloadReceipt };
+}
+
+// Admin payment utilities: per-student summary + recalculate late fees.
+export function usePaymentAdmin() {
+  const [summary, setSummary] = React.useState<PaymentSummary | null>(null);
+  const [recalculating, setRecalculating] = React.useState(false);
+
+  const loadSummary = async () => {
+    try {
+      setSummary(await feesApi.paymentsSummary());
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+  const recalcLateFees = async (onDone?: () => void | Promise<void>) => {
+    setRecalculating(true);
+    try {
+      const { count } = await feesApi.calculateLateFees();
+      toast.success(`Late fees recalculated for ${count} payment(s)`);
+      await onDone?.();
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message);
+      return false;
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
+  return { summary, loadSummary, recalculating, recalcLateFees };
+}
+
+// Payment proofs for one payment: list + admin verify/reject (toast + refetch).
+export function usePaymentProofs(paymentId: string | null) {
+  const q = useAsync(
+    () => (paymentId ? feesApi.listProofs(paymentId) : Promise.resolve([])),
+    [paymentId ?? ""],
+    { enabled: !!paymentId },
+  );
+  const [busyId, setBusyId] = React.useState<string | null>(null);
+
+  const verify = async (proofId: string, remarks?: string) => {
+    setBusyId(proofId);
+    try {
+      await feesApi.verifyProof(proofId, remarks ? { remarks } : {});
+      toast.success("Payment proof verified");
+      await q.refetch();
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message);
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const reject = async (proofId: string, remarks: string) => {
+    setBusyId(proofId);
+    try {
+      await feesApi.rejectProof(proofId, { remarks });
+      toast.success("Payment proof rejected");
+      await q.refetch();
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message);
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return { proofs: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, busyId, verify, reject };
 }
 
 // Admin/warden refunds: full list + review (approve/reject) + process workflow + create.

@@ -9,6 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { SingleSelect } from "@/components/ui/single-select";
 import {
@@ -30,11 +38,18 @@ const priorityColor: Record<string, string> = {
 };
 
 export default function WardenSupport() {
-  const { tickets, loading, error, setStatus, busyId } = useSupport("all");
+  const { tickets, loading, error, setStatus, assign, busyId } = useSupport("all");
   const [search, setSearch] = React.useState("");
   const [tab, setTab] = React.useState("open");
   const [priority, setPriority] = React.useState("");
   const [selected, setSelected] = React.useState<Ticket | null>(null);
+  const [assigning, setAssigning] = React.useState<Ticket | null>(null);
+
+  const confirmAssign = async () => {
+    if (!assigning) return;
+    const ok = await assign(assigning.id);
+    if (ok) setAssigning(null);
+  };
 
   const match = (t: Ticket) =>
     (t.subject.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,11 +102,38 @@ export default function WardenSupport() {
               { value: "all", label: "All", count: all.length },
             ]}
           />
-          <TicketTable rows={rows} loading={loading} busyId={busyId} onStatus={setStatus} onView={setSelected} />
+          <TicketTable
+            rows={rows}
+            loading={loading}
+            busyId={busyId}
+            onStatus={setStatus}
+            onAssign={setAssigning}
+            onView={setSelected}
+          />
         </CardContent>
       </Card>
 
       <TicketDetailDialog ticket={selected} onClose={() => setSelected(null)} canManage busy={!!busyId} onStatus={setStatus} />
+
+      <Dialog open={!!assigning} onOpenChange={(open) => !open && setAssigning(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign ticket to yourself</DialogTitle>
+            <DialogDescription>
+              You will become the handler for &ldquo;{assigning?.subject}&rdquo;. The ticket moves to
+              <span className="font-medium"> In progress</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssigning(null)} disabled={busyId === assigning?.id}>
+              Cancel
+            </Button>
+            <Button onClick={confirmAssign} disabled={busyId === assigning?.id}>
+              {busyId === assigning?.id ? "Assigning…" : "Assign to me"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -101,12 +143,14 @@ function TicketTable({
   loading,
   busyId,
   onStatus,
+  onAssign,
   onView,
 }: {
   rows: Ticket[];
   loading: boolean;
   busyId: string | null;
   onStatus: (id: string, status: string) => void;
+  onAssign: (t: Ticket) => void;
   onView: (t: Ticket) => void;
 }) {
   if (loading) return <SkeletonTable cols={5} />;
@@ -131,10 +175,17 @@ function TicketTable({
             <TableCell><StatusBadge status={t.status} /></TableCell>
             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
               {t.status !== "resolved" && t.status !== "closed" ? (
-                <Button size="sm" variant="outline" disabled={busyId === t.id}
-                  onClick={() => onStatus(t.id, t.status === "open" ? "in_progress" : "resolved")}>
-                  {t.status === "open" ? "Start" : "Resolve"}
-                </Button>
+                <div className="flex items-center justify-end gap-2">
+                  {t.status === "open" && (
+                    <Button size="sm" variant="ghost" disabled={busyId === t.id} onClick={() => onAssign(t)}>
+                      Assign
+                    </Button>
+                  )}
+                  <Button size="sm" variant="outline" disabled={busyId === t.id}
+                    onClick={() => onStatus(t.id, t.status === "open" ? "in_progress" : "resolved")}>
+                    {t.status === "open" ? "Start" : "Resolve"}
+                  </Button>
+                </div>
               ) : (
                 <Button variant="ghost" size="sm" onClick={() => onView(t)}>View</Button>
               )}

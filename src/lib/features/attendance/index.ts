@@ -41,6 +41,13 @@ export type LeaveBalance = {
   remaining_days?: number;
 };
 
+export type AttendanceHistoryParams = {
+  status?: string;
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+};
+
 export type ApplyLeaveInput = {
   leave_type_id: string;
   start_date: string;
@@ -66,6 +73,16 @@ export const attendanceApi = {
   leaveRequests: () => http.get<unknown>("/admin/leave/requests?limit=100").then((d) => unwrapList<LeaveRequest>(d, "requests")),
   dailyAttendance: (date: string) =>
     http.get<unknown>(`/admin/attendance/daily?date=${date}`).then((d) => unwrapList<AttendanceRow>(d, "attendance")),
+  byStudent: (studentId: string, params?: AttendanceHistoryParams) => {
+    const qs = new URLSearchParams();
+    qs.set("limit", String(params?.limit ?? 100));
+    if (params?.status) qs.set("status", params.status);
+    if (params?.start_date) qs.set("start_date", params.start_date);
+    if (params?.end_date) qs.set("end_date", params.end_date);
+    return http
+      .get<unknown>(`/admin/attendance/by-student/${studentId}?${qs.toString()}`)
+      .then((d) => unwrapList<AttendanceRow>(d, "records"));
+  },
   reviewLeave: (id: string, status: "approved" | "rejected") =>
     http.patch<LeaveRequest>(`/admin/leave/requests/${id}`, { status }),
   markAttendance: (records: { student_id: string; attendance_date: string; status: string }[]) =>
@@ -156,6 +173,20 @@ export function useLeaveReview() {
     }
   };
   return { requests: q.data ?? [], loading: q.loading, error: q.error, busyId: busy, review };
+}
+
+/** Admin/Warden: load one student's attendance history (gated by `enabled`). */
+export function useStudentAttendance(
+  studentId: string | null,
+  params?: AttendanceHistoryParams,
+  enabled = true,
+) {
+  const q = useAsync(
+    () => attendanceApi.byStudent(studentId as string, params),
+    [studentId, JSON.stringify(params ?? {})],
+    { enabled: enabled && !!studentId },
+  );
+  return { records: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch };
 }
 
 /** Admin/Warden: leave report data + export action (downloads a CSV summary). */

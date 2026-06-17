@@ -23,6 +23,8 @@ export const supportApi = {
     http.post<Ticket>("/support/tickets", body),
   updateStatus: (id: string, status: string, admin_remarks?: string) =>
     http.patch<Ticket>(`/support/tickets/${id}/status`, { status, admin_remarks }),
+  // Assign-to-me: backend ignores the body and uses the authenticated admin/warden id.
+  assign: (id: string) => http.patch<Ticket>(`/support/tickets/${id}/assign`, {}),
   comments: (id: string) =>
     http.get<unknown>(`/support/tickets/${id}/comments`).then((d) => unwrapList<TicketComment>(d, "comments")),
   addComment: (id: string, comment: string) =>
@@ -76,6 +78,21 @@ export function useSupport(scope: "all" | "mine" = "all") {
     }
   };
 
+  const assign = async (id: string) => {
+    setBusy(id);
+    try {
+      await supportApi.assign(id);
+      toast.success("Ticket assigned to you");
+      await q.refetch();
+      return true;
+    } catch (err) {
+      toast.error((err as Error).message);
+      return false;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const create = async (body: { category: string; subject: string; description: string; priority: string }) => {
     try {
       await supportApi.create(body);
@@ -88,5 +105,5 @@ export function useSupport(scope: "all" | "mine" = "all") {
     }
   };
 
-  return { tickets: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, busyId: busy, setStatus, create };
+  return { tickets: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, busyId: busy, setStatus, assign, create };
 }

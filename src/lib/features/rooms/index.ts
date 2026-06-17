@@ -276,6 +276,45 @@ export function usePackages() {
   };
 }
 
+// ── Dashboard & hierarchy ──
+// GET /rooms/dashboard -> { dashboard: { summary, status_breakdown, rooms_per_block, rooms_per_type } }
+export type RoomDashboard = {
+  summary: {
+    total_rooms: number;
+    total_capacity: number;
+    total_occupancy: number;
+    occupancy_rate: string | number;
+  };
+  status_breakdown: Partial<Record<Room["status"], number>>;
+  rooms_per_block: { id: string; name: string; room_count: string | number }[];
+  rooms_per_type: { id: string; name: string; capacity: number; room_count: string | number }[];
+};
+
+// GET /rooms/hierarchy -> { hierarchy: Block[] } where each block has floors -> rooms.
+export type HierarchyRoom = Room & {
+  roomType?: { id?: string; name: string; capacity: number; base_price?: string; amenities?: Amenity[] };
+  images?: RoomTypeImage[];
+};
+export type HierarchyFloor = Floor & { rooms?: HierarchyRoom[] };
+export type HierarchyBlock = Block & { floors?: HierarchyFloor[] };
+
+export const roomsDashboardApi = {
+  dashboard: () =>
+    http.get<unknown>("/rooms/dashboard").then((d) => unwrap<RoomDashboard>(d, "dashboard")),
+  hierarchy: () =>
+    http.get<unknown>("/rooms/hierarchy").then((d) => unwrapList<HierarchyBlock>(d, "hierarchy")),
+};
+
+export function useRoomsDashboard() {
+  const q = useAsync(() => roomsDashboardApi.dashboard(), []);
+  return { dashboard: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
+}
+
+export function useRoomsHierarchy() {
+  const q = useAsync(() => roomsDashboardApi.hierarchy(), []);
+  return { hierarchy: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch };
+}
+
 export function useInspections(roomId: string) {
   const q = useAsync(() => roomsApi.listInspections(roomId), [roomId]);
   const [busy, setBusy] = React.useState(false);

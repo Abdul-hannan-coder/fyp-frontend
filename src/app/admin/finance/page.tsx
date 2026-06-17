@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Eye, FileText, Plus, X } from "lucide-react";
-import { toast } from "sonner";
-import { feesApi } from "@/lib/features/fees/api";
+import { Check, Eye, FileText, Plus, RefreshCw, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -41,8 +39,9 @@ import SimpleSelect from "@/components/ui/simple-select";
 import { DateRangePicker, type DateRange } from "@/components/ui/date-range-picker";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { SkeletonCards, SkeletonTable } from "@/components/ui/skeleton";
-import { usePayments, useFeeStructures } from "@/lib/features/fees/useFees";
+import { usePayments, useFeeStructures, usePaymentAdmin, usePaymentProofs } from "@/lib/features/fees/useFees";
 import type { Payment } from "@/lib/features/fees/types";
+import { Textarea } from "@/components/ui/textarea";
 import { useFeeDashboard } from "@/lib/features/reports";
 import { useAsync } from "@/lib/useAsync";
 import { roomsApi } from "@/lib/features/rooms";
@@ -53,9 +52,10 @@ const nameOf = (p: { student?: { user?: { full_name: string }; student_id?: stri
 const FEE_TYPES = ["hostel_rent", "security_deposit", "mess_fee", "maintenance", "late_fee", "other"];
 
 export default function AdminFinance() {
-  const { payments, loading, error, verify, busyId } = usePayments();
+  const { payments, loading, error, verify, busyId, refetch } = usePayments();
   const { fees } = useFeeDashboard();
   const fs = useFeeStructures();
+  const admin = usePaymentAdmin();
   const [rejecting, setRejecting] = React.useState<Payment | null>(null);
   const [verifying, setVerifying] = React.useState<Payment | null>(null);
   const [dueRange, setDueRange] = React.useState<DateRange | null>(null);
@@ -80,11 +80,37 @@ export default function AdminFinance() {
     .reduce((s, p) => s + Number(p.total_amount), 0);
   const outstanding = pending.reduce((s, p) => s + (Number(p.total_amount) - Number(p.amount_paid)), 0);
 
+  // Summary stats sourced from the admin fee dashboard (GET /fees/dashboard).
+  // (/fees/payments/summary is student-scoped, so it cannot back an admin-wide view.)
+  const sumCollected = fees?.total_collected ?? 0;
+  const sumPending = fees?.total_pending ?? 0;
+  const sumOverdue = fees?.total_overdue ?? 0;
+  const sumBilled = sumCollected + sumPending + sumOverdue;
+  const sumOutstanding = sumPending + sumOverdue;
+
   return (
     <>
       <PageHeader title="Finance" description="Fees, payments, verification and refunds.">
+        <Button
+          variant="outline"
+          disabled={admin.recalculating}
+          onClick={() => { admin.recalcLateFees(() => { refetch(); }); }}
+        >
+          <RefreshCw className="size-4" />
+          Recalculate late fees
+        </Button>
         <FeeStructureDialog busy={fs.busy} onCreate={fs.create} />
       </PageHeader>
+
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Summary</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Total billed" value={money(sumBilled)} hint="all fees raised" />
+          <StatCard label="Collected" value={money(sumCollected)} trend="up" hint={`${Math.round(fees?.collection_rate ?? 0)}% rate`} />
+          <StatCard label="Outstanding" value={money(sumOutstanding)} trend="flat" hint="pending + overdue" />
+          <StatCard label="Overdue" value={money(sumOverdue)} trend="down" hint="past due date" />
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <StatCard label="Collected" value={money(collected)} trend="up" hint="verified payments" />
@@ -272,32 +298,119 @@ export default function AdminFinance() {
   );
 }
 
-// Fetches the resident's uploaded payment proof on demand and opens it.
+// Lists the resident's uploaded payment proofs and lets an admin verify/reject each.
 function ViewProofButton({ paymentId }: { paymentId: string }) {
-  const [loading, setLoading] = React.useState(false);
-  const open = async () => {
-    setLoading(true);
-    try {
-      const proofs = await feesApi.listProofs(paymentId);
-      const url = proofs.find((p) => p.proof_url)?.proof_url;
-      const txn = proofs.find((p) => p.transaction_id)?.transaction_id;
-      if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else if (txn) {
-        toast.info(`Transaction reference: ${txn}`);
-      } else {
-        toast.info("No proof uploaded for this payment yet.");
-      }
-    } catch (err) {
-      toast.error((err as Error).message || "Could not load proof");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [open, setOpen] = React.useState(false);
+  const { proofs, loading, busyId, verify, reject } = usePaymentProofs(open ? paymentId : null);
+  const [rejectId, setRejectId] = React.useState<string | null>(null);
+
   return (
-    <Button variant="outline" size="sm" onClick={open} disabled={loading}>
-      <Eye className="size-4" /> Proof
-    </Button>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger render={<Button variant="outline" size="sm" />}>
+          <Eye className="size-4" /> Proof
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Payment proofs</DialogTitle>
+            <DialogDescription>Review the resident&apos;s uploaded proof, then verify or reject.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {loading ? (
+              <SkeletonCards count={2} />
+            ) : proofs.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No proof uploaded for this payment yet.</p>
+            ) : (
+              proofs.map((pf) => (
+                <div key={pf.id} className="rounded-xl border border-border/60 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium capitalize">{pf.proof_type?.replace(/_/g, " ") ?? "Proof"}</p>
+                      {pf.transaction_id && (
+                        <p className="truncate text-xs text-muted-foreground">Txn: {pf.transaction_id}</p>
+                      )}
+                      {pf.remarks && <p className="text-xs text-muted-foreground">{pf.remarks}</p>}
+                    </div>
+                    <StatusBadge status={pf.status} />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {pf.proof_url && (
+                      <Button variant="outline" size="sm" onClick={() => window.open(pf.proof_url as string, "_blank", "noopener,noreferrer")}>
+                        <Eye className="size-4" /> Open file
+                      </Button>
+                    )}
+                    {pf.status === "pending" && (
+                      <>
+                        <Button variant="outline" size="sm" className="text-destructive" disabled={busyId === pf.id} onClick={() => setRejectId(pf.id)}>
+                          <X className="size-4" /> Reject
+                        </Button>
+                        <Button size="sm" disabled={busyId === pf.id} onClick={() => verify(pf.id)}>
+                          <Check className="size-4" /> Verify
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <RejectProofDialog
+        open={!!rejectId}
+        busy={!!rejectId && busyId === rejectId}
+        onOpenChange={(o) => !o && setRejectId(null)}
+        onConfirm={async (remarks) => {
+          if (!rejectId) return;
+          const ok = await reject(rejectId, remarks);
+          if (ok) setRejectId(null);
+        }}
+      />
+    </>
+  );
+}
+
+// Reject a payment proof — backend requires non-empty `remarks`.
+function RejectProofDialog({
+  open,
+  busy,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  busy: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (remarks: string) => void | Promise<void>;
+}) {
+  const [remarks, setRemarks] = React.useState("");
+  React.useEffect(() => {
+    if (open) setRemarks("");
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reject payment proof</DialogTitle>
+          <DialogDescription>Give the resident a reason for rejecting this proof.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-1.5">
+          <Label htmlFor="reject-remarks">Reason</Label>
+          <Textarea
+            id="reject-remarks"
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            placeholder="e.g. The transaction reference does not match our records."
+          />
+        </div>
+        <DialogFooter showCloseButton>
+          <Button variant="destructive" disabled={!remarks.trim() || busy} onClick={() => onConfirm(remarks.trim())}>
+            Reject proof
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Check, Search, X } from "lucide-react";
+import { Check, KeyRound, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,16 +25,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import SimpleSelect from "@/components/ui/simple-select";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
-import { SkeletonTable } from "@/components/ui/skeleton";
-import { useAllocationRequests } from "@/lib/features/allocation/useAllocation";
+import { Skeleton, SkeletonTable } from "@/components/ui/skeleton";
+import { useAsync } from "@/lib/useAsync";
+import { useAllocationRequests, useReserveRoom } from "@/lib/features/allocation/useAllocation";
 import type { AllocationRequest } from "@/lib/features/allocation/types";
+import { usersApi } from "@/lib/features/users/api";
+import type { ManagedUser } from "@/lib/features/users/types";
 
 const nameOf = (r: AllocationRequest) => r.student?.user?.full_name ?? r.student?.student_id ?? "Student";
 
 export default function AdminAllocations() {
-  const { requests, loading, error, review, busyId } = useAllocationRequests();
+  const { requests, loading, error, review, busyId, refetch } = useAllocationRequests();
   const [search, setSearch] = React.useState("");
   const [selected, setSelected] = React.useState<AllocationRequest | null>(null);
   const [rejecting, setRejecting] = React.useState<AllocationRequest | null>(null);
@@ -47,7 +53,9 @@ export default function AdminAllocations() {
 
   return (
     <>
-      <PageHeader title="Allocations" description="Oversight of requests, allocations and transfers." />
+      <PageHeader title="Allocations" description="Oversight of requests, allocations and transfers.">
+        <ReserveRoomDialog onReserved={refetch} />
+      </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Allocated" value={String(allocated.length)} hint="placed residents" />
@@ -179,6 +187,93 @@ function ReqTable({
         ))}
       </TableBody>
     </Table>
+  );
+}
+
+// Reserve the room a student selected at signup (POST /allocations/reserve { user_id }).
+// The room is whatever the user picked when applying, so we only pick the user.
+function ReserveRoomDialog({ onReserved }: { onReserved: () => void }) {
+  const [open, setOpen] = React.useState(false);
+  const [userId, setUserId] = React.useState("");
+  const { busy, reserve } = useReserveRoom(() => {
+    onReserved();
+    setOpen(false);
+    setUserId("");
+  });
+
+  const usersQ = useAsync(
+    () => usersApi.list({ role: "student", limit: 200 }),
+    [String(open)],
+    { enabled: open },
+  );
+
+  // Only users who actually selected a room at signup can be reserved.
+  const candidates = (usersQ.data ?? []).filter((u) => u.selectedRoom || u.selected_room_id);
+  const selected = candidates.find((u) => u.id === userId);
+
+  React.useEffect(() => {
+    if (open && !userId && candidates[0]) setUserId(candidates[0].id);
+  }, [open, userId, candidates]);
+
+  const roomLabel = (u: ManagedUser) => (u.selectedRoom ? ` · Room ${u.selectedRoom.room_number}` : "");
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button />}>
+        <KeyRound className="size-4" /> Reserve room
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Reserve room</DialogTitle>
+          <DialogDescription>
+            Reserve the room a resident selected at signup and raise their payment.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {usersQ.loading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+          ) : usersQ.error ? (
+            <p className="text-sm text-destructive">{usersQ.error}</p>
+          ) : candidates.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No residents with a selected room are awaiting reservation.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <Label>Resident</Label>
+                <SimpleSelect
+                  value={userId}
+                  onChange={setUserId}
+                  className="w-full"
+                  options={candidates.map((u) => ({
+                    value: u.id,
+                    label: `${u.full_name}${roomLabel(u)}`,
+                  }))}
+                />
+              </div>
+              {selected && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                  <p className="font-medium">{selected.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{selected.email}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Selected room: {selected.selectedRoom?.room_number ?? "—"}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <DialogFooter showCloseButton>
+          <Button disabled={!userId || busy || candidates.length === 0} onClick={() => reserve(userId)}>
+            Reserve
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

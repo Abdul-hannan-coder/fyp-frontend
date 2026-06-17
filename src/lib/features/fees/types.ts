@@ -51,6 +51,15 @@ export type PaymentProof = {
   created_at?: string;
 };
 
+// Per-student payment summary returned by GET /fees/payments/summary (student-scoped).
+export type PaymentSummary = {
+  total_due: number;
+  total_paid: number;
+  total_pending: number;
+  total_overdue: number;
+  payment_count: number;
+};
+
 export type RefundStatus = "pending" | "approved" | "processed" | "rejected";
 
 export const REFUND_STATUSES: RefundStatus[] = ["pending", "approved", "processed", "rejected"];

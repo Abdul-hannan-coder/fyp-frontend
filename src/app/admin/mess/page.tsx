@@ -307,11 +307,25 @@ function DeletePlanDialog({
 /* ───────────────────────── Menu ───────────────────────── */
 
 function MenuTab({ admin }: { admin: ReturnType<typeof useAdminMess> }) {
-  const { menu, menuLoading, menuError, busy, createMenu } = admin;
+  const { menu, menuLoading, menuError, menuDate, setMenuDate, busy, createMenu } = admin;
   return (
     <>
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{menu.length} menu entr{menu.length === 1 ? "y" : "ies"}</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="menu-date">Filter by date</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="menu-date"
+              type="date"
+              className="w-44"
+              value={menuDate}
+              onChange={(e) => setMenuDate(e.target.value)}
+            />
+            {menuDate && (
+              <Button variant="ghost" size="sm" onClick={() => setMenuDate("")}>Clear</Button>
+            )}
+          </div>
+        </div>
         <MenuDialog busy={busy} onCreate={createMenu} />
       </div>
 
@@ -322,13 +336,17 @@ function MenuTab({ admin }: { admin: ReturnType<typeof useAdminMess> }) {
       <Card>
         <CardHeader>
           <CardTitle>Daily menu</CardTitle>
-          <CardDescription>Scheduled meals by date.</CardDescription>
+          <CardDescription>
+            {menuDate ? `Meals for ${fmtDate(menuDate)}` : "Scheduled meals by date."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {menuLoading ? (
             <SkeletonTable cols={4} />
           ) : menu.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">No menu entries yet — add one.</p>
+            <p className="py-10 text-center text-sm text-muted-foreground">
+              {menuDate ? "No menu entries for this date." : "No menu entries yet — add one."}
+            </p>
           ) : (
             <Table>
               <TableHeader>
