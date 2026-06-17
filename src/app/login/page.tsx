@@ -29,11 +29,10 @@ export default function LoginPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await login({ email, password });
+      await login({ email, password });
       setOtp("");
       setStep("otp");
-      if (res.dev_otp) toast.info(`Dev code: ${res.dev_otp}`, { duration: 10000 });
-      else toast.success("We've emailed you a 6-digit verification code.");
+      toast.success("We've emailed you a 6-digit verification code.");
     } catch (err) {
       if (err instanceof ApiError && err.code === "PENDING_APPROVAL") {
         toast.info("Your application is awaiting admin approval. We'll email you once it's approved.");
@@ -63,9 +62,8 @@ export default function LoginPage() {
 
   const resend = async () => {
     try {
-      const res = await login({ email, password });
-      if (res.dev_otp) toast.info(`Dev code: ${res.dev_otp}`, { duration: 10000 });
-      else toast.success("A new code is on its way.");
+      await login({ email, password });
+      toast.success("A new code is on its way.");
     } catch (err) {
       toast.error((err as Error).message || "Could not resend the code");
     }

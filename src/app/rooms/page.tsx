@@ -6,7 +6,6 @@ import {
   BedDouble,
   Building2,
   Check,
-  Loader2,
   Search,
   Sparkles,
   Users,
@@ -17,6 +16,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SimpleSelect from "@/components/ui/simple-select";
+import { SkeletonGrid } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { usePublicRooms, type PublicRoom } from "@/lib/features/public";
 
@@ -234,9 +234,7 @@ export default function RoomsBrowsePage() {
             </p>
 
             {loading ? (
-              <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-                <Loader2 className="size-5 animate-spin" /> Loading the catalogue…
-              </div>
+              <SkeletonGrid count={6} />
             ) : filtered.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-12 text-center">
                 <BedDouble className="mx-auto size-8 text-muted-foreground" />

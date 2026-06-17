@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -9,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { useMessMenu, type MealMenu, type MenuItem } from "@/lib/features/mess";
 
 // Menu items come back as an array of {item} objects, a plain string array, a
@@ -57,11 +57,7 @@ export function MessWeek() {
   const { menu, loading } = useMessMenu();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading menu…
-      </div>
-    );
+    return <SkeletonTable cols={4} />;
   }
 
   const rows = groupByDay(menu);

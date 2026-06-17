@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, Loader2, Upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useUsers } from "@/lib/features/users/useUsers";
@@ -25,10 +25,10 @@ export default function AdminStudents() {
       <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={onPick} />
       <div className="flex flex-wrap items-center justify-end gap-2">
         <Button variant="outline" size="sm" disabled={csv.busy} onClick={csv.exportCsv}>
-          {csv.busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Export CSV
+          <Download className="size-4" /> Export CSV
         </Button>
         <Button variant="outline" size="sm" disabled={csv.busy} onClick={() => fileRef.current?.click()}>
-          {csv.busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} Import CSV
+          <Upload className="size-4" /> Import CSV
         </Button>
       </div>
       <Card>

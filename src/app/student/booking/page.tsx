@@ -8,7 +8,6 @@ import {
   Clock,
   CreditCard,
   Landmark,
-  Loader2,
   ShieldCheck,
   Upload,
   Users,
@@ -19,6 +18,7 @@ import { Stepper } from "@/components/journey/stepper";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -210,8 +210,17 @@ export default function StudentBooking() {
             </CardHeader>
             <CardContent>
               {busy ? (
-                <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" /> Loading…
+                <div className="space-y-3 py-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <Skeleton className="h-px w-full" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-7 w-28" />
+                  </div>
+                  <Skeleton className="h-10 w-full rounded-xl" />
                 </div>
               ) : awaitingApproval ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
@@ -237,7 +246,6 @@ export default function StudentBooking() {
                     <span className="font-heading text-2xl font-semibold">{money(total)}</span>
                   </div>
                   <Button size="lg" className="mt-5 w-full" onClick={() => fileRef.current?.click()} disabled={submitting}>
-                    {submitting && <Loader2 className="size-4 animate-spin" />}
                     {submitting ? "Uploading…" : "Pay & upload proof"}
                   </Button>
                   <p className="mt-2 text-center text-xs text-muted-foreground">

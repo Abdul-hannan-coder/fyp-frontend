@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { BedDouble, Building2, Check, DoorOpen, ImageIcon, Loader2, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Users, X } from "lucide-react";
+import { BedDouble, Building2, Check, DoorOpen, ImageIcon, Pencil, Plus, RotateCcw, Search, Trash2, Upload, Users, X } from "lucide-react";
+import { SkeletonGrid } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ function FormShell({ children, busy, onCancel, submitLabel }: { children: React.
       <div className="grid gap-3 sm:grid-cols-2">{children}</div>
       <div className="mt-4 flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" size="sm" disabled={busy}>{busy && <Loader2 className="size-4 animate-spin" />} {submitLabel}</Button>
+        <Button type="submit" size="sm" disabled={busy}>{submitLabel}</Button>
       </div>
     </div>
   );
@@ -656,7 +657,7 @@ function RoomPanel({ initial, floors, roomTypes, amenities, onDone, onCancel, re
                   {img.is_primary && <span className="absolute left-0.5 top-0.5 rounded bg-gold px-1 text-[9px] font-semibold text-gold-foreground">★</span>}
                   <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                     {!img.is_primary && <button type="button" title="Set primary" disabled={imgBusy === img.id} onClick={() => makePrimary(img)} className="rounded bg-white/90 px-1 text-[10px] font-medium text-black">★</button>}
-                    <button type="button" title="Delete" disabled={imgBusy === img.id} onClick={() => deleteExisting(img)} className="rounded bg-white/90 p-0.5 text-destructive">{imgBusy === img.id ? <Loader2 className="size-3 animate-spin" /> : <Trash2 className="size-3" />}</button>
+                    <button type="button" title="Delete" disabled={imgBusy === img.id} onClick={() => deleteExisting(img)} className="rounded bg-white/90 p-0.5 text-destructive"><Trash2 className="size-3" /></button>
                   </div>
                 </div>
               ))}
@@ -681,7 +682,7 @@ function RoomPanel({ initial, floors, roomTypes, amenities, onDone, onCancel, re
 
           <div className="flex justify-end gap-2 pt-1">
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
-            <Button type="button" size="sm" onClick={submit} disabled={busy}>{busy && <Loader2 className="size-4 animate-spin" />} {isEdit ? "Save changes" : "Create room"}</Button>
+            <Button type="button" size="sm" onClick={submit} disabled={busy}>{isEdit ? "Save changes" : "Create room"}</Button>
           </div>
         </div>
 
@@ -732,5 +733,5 @@ function RoomPanel({ initial, floors, roomTypes, amenities, onDone, onCancel, re
 }
 
 function Loading() {
-  return <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading…</div>;
+  return <SkeletonGrid count={6} />;
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import {
@@ -48,9 +48,7 @@ export default function StudentRefunds() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={5} />
           ) : refunds.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No refunds on record. The hostel administration will raise a refund on your behalf when one applies.

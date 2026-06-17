@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -137,7 +137,6 @@ export default function VerifyPage() {
           </div>
 
           <Button onClick={verify} className="mt-7 w-full" size="lg" disabled={submitting}>
-            {submitting && <Loader2 className="size-4 animate-spin" />}
             {submitting ? "Verifying…" : "Verify & continue"}
           </Button>
 

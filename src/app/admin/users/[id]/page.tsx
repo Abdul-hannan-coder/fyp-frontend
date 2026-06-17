@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Camera, Loader2, Mail, Phone, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Mail, Phone, Save, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -104,7 +105,15 @@ export default function AdminUserDetail() {
   };
 
   if (userQ.loading) {
-    return <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading…</div>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl lg:col-span-2" />
+        </div>
+      </div>
+    );
   }
   if (!user) {
     return (
@@ -148,7 +157,7 @@ export default function AdminUserDetail() {
                   <input ref={photoRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />
                   <button type="button" onClick={() => photoRef.current?.click()} disabled={busy || !record}
                     className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full border-2 border-card bg-gold text-gold-foreground disabled:opacity-50">
-                    {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                    <Camera className="size-4" />
                   </button>
                 </>
               )}
@@ -297,7 +306,21 @@ function ProfileCard({
   };
 
   if (loading) {
-    return <Card><CardContent className="flex items-center gap-2 py-10 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading profile…</CardContent></Card>;
+    return (
+      <Card>
+        <CardContent className="space-y-3 py-6">
+          <Skeleton className="h-5 w-40" />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Read-only view (existing profile, not editing)
@@ -358,7 +381,7 @@ function ProfileCard({
         <div className="sm:col-span-2 mt-2 flex justify-end gap-2">
           {!creating && <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancel</Button>}
           <Button size="sm" disabled={busy || (creating && !validCreate)} onClick={save}>
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} {creating ? "Create profile" : "Save changes"}
+            <Save className="size-4" /> {creating ? "Create profile" : "Save changes"}
           </Button>
         </div>
       </CardContent>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, KeyRound, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, Check, KeyRound, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -98,7 +98,6 @@ export default function ForgotPasswordPage() {
                 />
               </div>
               <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-                {submitting && <Loader2 className="size-4 animate-spin" />}
                 {submitting ? "Sending…" : "Send reset code"}
               </Button>
             </form>
@@ -137,7 +136,6 @@ export default function ForgotPasswordPage() {
                 )}
               </div>
               <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-                {submitting && <Loader2 className="size-4 animate-spin" />}
                 {submitting ? "Resetting…" : "Reset password"}
               </Button>
               <button

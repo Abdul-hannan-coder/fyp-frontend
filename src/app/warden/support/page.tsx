@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { TicketDetailDialog } from "@/components/dialogs/ticket-detail-dialog";
 import { useSupport, type Ticket } from "@/lib/features/support";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 const priorityColor: Record<string, string> = {
   high: "bg-destructive/12 text-destructive border-destructive/25",
@@ -108,12 +109,7 @@ function TicketTable({
   onStatus: (id: string, status: string) => void;
   onView: (t: Ticket) => void;
 }) {
-  if (loading)
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </div>
-    );
+  if (loading) return <SkeletonTable cols={5} />;
   if (rows.length === 0) return <p className="py-10 text-center text-sm text-muted-foreground">No tickets here.</p>;
   return (
     <Table>
@@ -137,7 +133,6 @@ function TicketTable({
               {t.status !== "resolved" && t.status !== "closed" ? (
                 <Button size="sm" variant="outline" disabled={busyId === t.id}
                   onClick={() => onStatus(t.id, t.status === "open" ? "in_progress" : "resolved")}>
-                  {busyId === t.id ? <Loader2 className="size-4 animate-spin" /> : null}
                   {t.status === "open" ? "Start" : "Resolve"}
                 </Button>
               ) : (

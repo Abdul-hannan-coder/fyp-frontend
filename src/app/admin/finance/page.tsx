@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Eye, FileText, Loader2, Plus, X } from "lucide-react";
+import { Check, Eye, FileText, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { feesApi } from "@/lib/features/fees/api";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -40,6 +40,7 @@ import { DonutChart } from "@/components/ui/donut-chart";
 import SimpleSelect from "@/components/ui/simple-select";
 import { DateRangePicker, type DateRange } from "@/components/ui/date-range-picker";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { SkeletonCards, SkeletonTable } from "@/components/ui/skeleton";
 import { usePayments, useFeeStructures } from "@/lib/features/fees/useFees";
 import type { Payment } from "@/lib/features/fees/types";
 import { useFeeDashboard } from "@/lib/features/reports";
@@ -133,7 +134,7 @@ export default function AdminFinance() {
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
-            <Loading />
+            <SkeletonCards count={4} />
           ) : pending.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Nothing to verify right now.</p>
           ) : (
@@ -160,7 +161,7 @@ export default function AdminFinance() {
                     <X className="size-4" /> Reject
                   </Button>
                   <Button size="sm" disabled={busyId === p.id} onClick={() => setVerifying(p)}>
-                    {busyId === p.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Verify
+                    <Check className="size-4" /> Verify
                   </Button>
                 </div>
               </div>
@@ -216,7 +217,7 @@ export default function AdminFinance() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <Loading />
+            <SkeletonTable cols={4} />
           ) : visiblePayments.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               {payments.length === 0 ? "No payments recorded yet." : "No payments due in this period."}
@@ -271,14 +272,6 @@ export default function AdminFinance() {
   );
 }
 
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
-}
-
 // Fetches the resident's uploaded payment proof on demand and opens it.
 function ViewProofButton({ paymentId }: { paymentId: string }) {
   const [loading, setLoading] = React.useState(false);
@@ -303,7 +296,7 @@ function ViewProofButton({ paymentId }: { paymentId: string }) {
   };
   return (
     <Button variant="outline" size="sm" onClick={open} disabled={loading}>
-      {loading ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />} Proof
+      <Eye className="size-4" /> Proof
     </Button>
   );
 }
@@ -362,7 +355,7 @@ function FeeStructureDialog({ busy, onCreate }: {
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !amount || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Create fee
+            Create fee
           </Button>
         </DialogFooter>
       </DialogContent>

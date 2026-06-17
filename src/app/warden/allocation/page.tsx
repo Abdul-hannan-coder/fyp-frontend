@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, Plus, Search, X } from "lucide-react";
+import { Check, Plus, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -37,6 +37,7 @@ import { studentsApi } from "@/lib/features/students";
 import { roomsApi } from "@/lib/features/rooms";
 import type { AllocationRequest } from "@/lib/features/allocation/types";
 import SimpleSelect from "@/components/ui/simple-select";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 const priorityLabel = (n?: number) => (n && n >= 2 ? "high" : n === 1 ? "medium" : "low");
 const priorityColor: Record<string, string> = {
@@ -125,12 +126,7 @@ function RequestTable({
   onReview: (id: string, d: "approved" | "rejected", remarks?: string) => void;
   onReject?: (r: AllocationRequest) => void;
 }) {
-  if (loading)
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </div>
-    );
+  if (loading) return <SkeletonTable cols={4} />;
   if (rows.length === 0)
     return <p className="py-10 text-center text-sm text-muted-foreground">No requests here.</p>;
 
@@ -162,7 +158,7 @@ function RequestTable({
                   <div className="flex justify-end gap-1.5">
                     <Button size="icon-sm" variant="outline" className="text-success" disabled={busyId === r.id}
                       onClick={() => onReview(r.id, "approved", "Approved")}>
-                      {busyId === r.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      <Check className="size-4" />
                     </Button>
                     <Button size="icon-sm" variant="outline" className="text-destructive" disabled={busyId === r.id}
                       onClick={() => onReject?.(r)}>
@@ -244,7 +240,7 @@ function DirectAllocateDialog({ onDone }: { onDone: () => void }) {
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!valid || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Allocate
+            Allocate
           </Button>
         </DialogFooter>
       </DialogContent>

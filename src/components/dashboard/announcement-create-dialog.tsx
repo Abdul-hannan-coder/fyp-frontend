@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,7 +97,7 @@ export function AnnouncementCreateDialog({
             Save draft
           </Button>
           <Button disabled={!valid || busy} onClick={() => submit(true)}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Publish
+            Publish
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, Loader2, Plus, Search, X } from "lucide-react";
+import { Check, ChevronRight, Plus, Search, X } from "lucide-react";
+import { SkeletonCards } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -127,7 +128,7 @@ export function ApplicationsList({ actions }: { actions: UsersActions }) {
               <X className="size-4" /> Reject
             </Button>
             <Button size="sm" disabled={actions.busyId === a.id} onClick={() => setApproving(a)}>
-              {actions.busyId === a.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Approve
+              <Check className="size-4" /> Approve
             </Button>
           </div>
         </div>
@@ -362,7 +363,7 @@ export function CreateUserDialog({ creating, onCreate }: {
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!valid || !profileValid || busy || creating} onClick={submit}>
-            {(busy || creating) && <Loader2 className="size-4 animate-spin" />} Create {role} account
+            Create {role} account
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -371,11 +372,7 @@ export function CreateUserDialog({ creating, onCreate }: {
 }
 
 export function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
+  return <SkeletonCards count={4} />;
 }
 export function Empty({ label }: { label: string }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{label}</p>;

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth, roleHome } from "@/lib/features/auth/useAuth";
 import type { RoleName } from "@/lib/features/auth/types";
 
@@ -37,8 +37,10 @@ export function RoleGuard({
   // While bootstrapping the session, or mid-redirect, show a calm loader.
   if (status === "idle" || status === "loading" || status === "unauthenticated" || !allowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        <Loader2 className="size-6 animate-spin" />
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-4 w-56" />
+        <Skeleton className="h-4 w-48" />
       </div>
     );
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, RotateCcw, X } from "lucide-react";
+import { Check, RotateCcw, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -28,6 +28,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import SimpleSelect from "@/components/ui/simple-select";
+import { Skeleton, SkeletonTable } from "@/components/ui/skeleton";
 import { usePayments, useRefunds } from "@/lib/features/fees/useFees";
 import type { Payment, Refund } from "@/lib/features/fees/types";
 
@@ -69,9 +70,7 @@ export default function AdminRefunds() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={6} />
           ) : refunds.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No refund requests yet.</p>
           ) : (
@@ -118,7 +117,7 @@ export default function AdminRefunds() {
                                 }
                               }}
                             >
-                              {busy && <Loader2 className="size-4 animate-spin" />} Mark processed
+                              Mark processed
                             </Button>
                           )}
                           {(r.status === "processed" || r.status === "rejected") && (
@@ -215,8 +214,10 @@ function NewRefundDialog({
           <DialogDescription>Pick a paid payment, then set the amount and reason.</DialogDescription>
         </DialogHeader>
         {payq.loading ? (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading payments…
+          <div className="space-y-4">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
         ) : refundable.length === 0 ? (
           <p className="py-4 text-sm text-muted-foreground">No paid payments are eligible for a refund.</p>
@@ -257,7 +258,7 @@ function NewRefundDialog({
         )}
         <DialogFooter showCloseButton>
           <Button disabled={invalid || submitting} onClick={submit}>
-            {submitting && <Loader2 className="size-4 animate-spin" />} Create refund
+            Create refund
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -304,7 +305,7 @@ function ReviewDialog({
           </div>
           <DialogFooter showCloseButton>
             <Button disabled={busy} onClick={() => onConfirm(remarks)}>
-              {busy && <Loader2 className="size-4 animate-spin" />} {approving ? "Approve" : "Reject"}
+              {approving ? "Approve" : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

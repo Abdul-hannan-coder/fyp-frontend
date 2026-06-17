@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,7 +75,7 @@ export function ConfirmDialog({
             disabled={busy || !canConfirm}
             onClick={() => onConfirm(reason.trim())}
           >
-            {busy && <Loader2 className="size-4 animate-spin" />} {confirmLabel}
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

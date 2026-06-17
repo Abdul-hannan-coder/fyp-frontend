@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVisitors } from "@/lib/features/visitors";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 export default function WardenVisitors() {
   const { visitors, loading, error, checkout, busyId } = useVisitors("today");
@@ -61,9 +62,7 @@ export default function WardenVisitors() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={6} />
           ) : filtered.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No visitors logged today.</p>
           ) : (
@@ -89,7 +88,7 @@ export default function WardenVisitors() {
                     <TableCell className="text-right">
                       {v.status === "checked_in" && (
                         <Button size="sm" variant="outline" disabled={busyId === v.id} onClick={() => checkout(v.id)}>
-                          {busyId === v.id ? <Loader2 className="size-4 animate-spin" /> : null} Check out
+                          Check out
                         </Button>
                       )}
                     </TableCell>

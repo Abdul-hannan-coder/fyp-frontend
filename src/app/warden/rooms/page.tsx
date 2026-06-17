@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Search, Trash2, Upload } from "lucide-react";
+import { Search, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useAsync } from "@/lib/useAsync";
 import { PageHeader } from "@/components/dashboard/page-header";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useRooms, roomsApi, type Room } from "@/lib/features/rooms";
 import SimpleSelect from "@/components/ui/simple-select";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 const STATUSES = ["available", "occupied", "maintenance", "reserved"];
 
@@ -68,9 +69,7 @@ export default function WardenRooms() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={5} />
           ) : (
             <AnimatedTable
               rows={filtered}
@@ -111,7 +110,7 @@ export default function WardenRooms() {
                   <Button key={s} variant={live.status === s ? "secondary" : "outline"} size="sm"
                     disabled={busyId === live.id || live.status === s}
                     onClick={() => setStatus(live.id, s)} className="capitalize justify-start">
-                    {busyId === live.id ? <Loader2 className="size-4 animate-spin" /> : null} {s}
+                    {s}
                   </Button>
                 ))}
               </div>
@@ -162,7 +161,7 @@ function RoomImages({ roomId }: { roomId: string }) {
         <p className="text-sm font-medium">Photos ({images.length})</p>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => onFiles(e.target.files)} />
         <Button size="sm" variant="outline" disabled={busy} onClick={() => fileRef.current?.click()}>
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />} Upload
+          <Upload className="size-4" /> Upload
         </Button>
       </div>
       {images.length === 0 ? (

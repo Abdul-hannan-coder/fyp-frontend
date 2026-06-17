@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, Loader2, Megaphone, Pin } from "lucide-react";
+import { Check, Megaphone, Pin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SkeletonCards } from "@/components/ui/skeleton";
 import Markdown from "@/components/ui/Markdown";
 import { useAnnouncements } from "@/lib/features/announcements";
 
@@ -16,12 +17,7 @@ export function AnnouncementsFeed({
 }) {
   const { announcements, loading, error, markRead } = useAnnouncements(scope);
 
-  if (loading)
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </div>
-    );
+  if (loading) return <SkeletonCards count={4} />;
   if (error)
     return <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>;
   if (announcements.length === 0)

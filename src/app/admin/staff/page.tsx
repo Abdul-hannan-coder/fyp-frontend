@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Pencil, Plus, Trash2, UserCog } from "lucide-react";
+import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SimpleSelect from "@/components/ui/simple-select";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import {
   useStaff,
   DUTY_TYPES,
@@ -94,14 +95,6 @@ export default function AdminStaff() {
 
 type UseStaff = ReturnType<typeof useStaff>;
 
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
-}
-
 function Empty({ children }: { children: React.ReactNode }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{children}</p>;
 }
@@ -125,7 +118,7 @@ function MembersTab({ st, users }: { st: UseStaff; users: ManagedUser[] }) {
       </CardHeader>
       <CardContent>
         {st.loading ? (
-          <Loading />
+          <SkeletonTable cols={5} />
         ) : st.staff.length === 0 ? (
           <Empty>No staff added yet — create a role, then add a member.</Empty>
         ) : (
@@ -260,7 +253,7 @@ function MemberDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={(!edit && !userId) || !roleId || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} {edit ? "Save changes" : "Add member"}
+            {edit ? "Save changes" : "Add member"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -279,7 +272,7 @@ function RolesTab({ st }: { st: UseStaff }) {
       </CardHeader>
       <CardContent>
         {st.rolesLoading ? (
-          <Loading />
+          <SkeletonTable cols={3} />
         ) : st.roles.length === 0 ? (
           <Empty>No roles yet — create one, e.g. Warden, Security.</Empty>
         ) : (
@@ -366,7 +359,7 @@ function RoleDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} {edit ? "Save changes" : "Create"}
+            {edit ? "Save changes" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -385,7 +378,7 @@ function DutiesTab({ st }: { st: UseStaff }) {
       </CardHeader>
       <CardContent>
         {st.dutiesLoading ? (
-          <Loading />
+          <SkeletonTable cols={5} />
         ) : st.duties.length === 0 ? (
           <Empty>No duties assigned yet.</Empty>
         ) : (
@@ -501,7 +494,7 @@ function DutyDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={(!edit && !staffId) || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} {edit ? "Save changes" : "Assign"}
+            {edit ? "Save changes" : "Assign"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -520,7 +513,7 @@ function SchedulesTab({ st }: { st: UseStaff }) {
       </CardHeader>
       <CardContent>
         {st.schedulesLoading ? (
-          <Loading />
+          <SkeletonTable cols={5} />
         ) : st.schedules.length === 0 ? (
           <Empty>No schedules yet.</Empty>
         ) : (
@@ -649,7 +642,7 @@ function ScheduleDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={(!edit && !staffId) || !start || !end || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} {edit ? "Save changes" : "Create"}
+            {edit ? "Save changes" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

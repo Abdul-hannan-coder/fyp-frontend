@@ -8,7 +8,6 @@ import {
   Building2,
   Check,
   ClipboardList,
-  Loader2,
   Megaphone,
   RefreshCw,
   UserCog,
@@ -37,6 +36,7 @@ import { useUsers } from "@/lib/features/users/useUsers";
 import { usePayments } from "@/lib/features/fees/useFees";
 import { useAllocationRequests } from "@/lib/features/allocation/useAllocation";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const money = (v?: number) => `₨ ${Number(v ?? 0).toLocaleString()}`;
 const initials = (n: string) => n.split(" ").map((w) => w[0]).slice(0, 2).join("");
@@ -122,8 +122,10 @@ export default function AdminDashboard() {
       </div>
 
       {loading && (
-        <div className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading live metrics…
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
         </div>
       )}
 
@@ -153,7 +155,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Button size="icon-sm" variant="outline" className="text-success" disabled={userBusy === a.id} onClick={() => approve(a.id)}>
-                      {userBusy === a.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      <Check className="size-4" />
                     </Button>
                     <Button size="icon-sm" variant="outline" className="text-destructive" disabled={userBusy === a.id}
                       onClick={() => setPending({ label: `Reject ${a.full_name}'s application`, run: (reason) => reject(a.id, reason || "Not eligible") })}>
@@ -187,7 +189,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Button size="icon-sm" variant="outline" className="text-success" disabled={payBusy === p.id} onClick={() => verify(p.id, "paid")}>
-                      {payBusy === p.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      <Check className="size-4" />
                     </Button>
                     <Button size="icon-sm" variant="outline" className="text-destructive" disabled={payBusy === p.id}
                       onClick={() => setPending({ label: "Reject this payment", run: (reason) => verify(p.id, "rejected", reason || "Rejected") })}>
@@ -221,7 +223,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <Button size="icon-sm" variant="outline" className="text-success" disabled={reqBusy === r.id} onClick={() => review(r.id, "approved")}>
-                      {reqBusy === r.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                      <Check className="size-4" />
                     </Button>
                     <Button size="icon-sm" variant="outline" className="text-destructive" disabled={reqBusy === r.id}
                       onClick={() => setPending({ label: "Reject this request", run: (reason) => review(r.id, "rejected", reason || "Rejected") })}>

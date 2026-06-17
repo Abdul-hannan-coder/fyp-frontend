@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { CalendarPlus, Loader2, X } from "lucide-react";
+import { CalendarPlus, X } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -121,9 +122,7 @@ export default function StudentAttendance() {
         <CardContent>
           {error && <p className="py-6 text-center text-sm text-destructive">{error}</p>}
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={5} />
           ) : requests.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No leave requests yet.</p>
           ) : (
@@ -218,7 +217,7 @@ function ApplyLeaveDialog({
           disabled={!valid || busy}
           onClick={() => onSubmit({ leave_type_id: leaveTypeId, start_date: startDate, end_date: endDate, reason })}
         >
-          {busy && <Loader2 className="size-4 animate-spin" />} Submit request
+          Submit request
         </Button>
       </DialogFooter>
     </DialogContent>

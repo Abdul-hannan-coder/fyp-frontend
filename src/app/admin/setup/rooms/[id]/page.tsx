@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ClipboardCheck, ImagePlus, Loader2, Pencil, Plus, Star, Trash2, Upload, Wrench, X } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, ImagePlus, Pencil, Plus, Star, Trash2, Upload, Wrench, X } from "lucide-react";
+import { Skeleton, SkeletonCards, SkeletonGrid } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Input } from "@/components/ui/input";
@@ -53,8 +54,15 @@ export default function RoomDetailPage() {
 
   if (roomQ.loading && !room) {
     return (
-      <div className="flex items-center justify-center py-24 text-muted-foreground">
-        <Loader2 className="size-5 animate-spin" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-56" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-36" />
+        </div>
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
   }
@@ -224,7 +232,7 @@ function OverviewCard({ room, roomTypes, onSaved }: { room: Room; roomTypes: Roo
             <div className="flex justify-end gap-2 border-t pt-4">
               <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
               <Button type="submit" size="sm" disabled={busy}>
-                {busy && <Loader2 className="size-4 animate-spin" />} Save changes
+                Save changes
               </Button>
             </div>
           </form>
@@ -335,7 +343,7 @@ function ImageGallery({
           <CardDescription>{images.length} {images.length === 1 ? "image" : "images"}</CardDescription>
         </div>
         <Button size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />} Upload
+          <ImagePlus className="size-4" /> Upload
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -352,9 +360,7 @@ function ImageGallery({
         />
 
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading…
-          </div>
+          <SkeletonGrid count={6} />
         ) : images.length === 0 ? (
           <button
             type="button"
@@ -395,7 +401,7 @@ function ImageGallery({
                       disabled={busyId === img.id}
                       onClick={() => onSetPrimary(img)}
                     >
-                      {busyId === img.id ? <Loader2 className="size-4 animate-spin" /> : <Star className="size-4" />}
+                      <Star className="size-4" />
                     </Button>
                   )}
                   <Button
@@ -452,9 +458,7 @@ function InspectionsCard({ roomId, onLogged }: { roomId: string; onLogged: () =>
           <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{insp.error}</div>
         )}
         {insp.loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading…
-          </div>
+          <SkeletonCards count={4} />
         ) : insp.inspections.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">No inspections logged yet.</p>
         ) : (
@@ -572,7 +576,7 @@ function LogInspectionDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Log inspection
+            Log inspection
           </Button>
         </DialogFooter>
       </DialogContent>

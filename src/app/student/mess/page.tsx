@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { MessWeek } from "@/components/dashboard/mess-week";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -70,8 +71,20 @@ export default function StudentMess() {
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
-              <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Loading…
+              <div className="space-y-3">
+                <Skeleton className="h-20 w-full rounded-xl" />
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <div className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
               </div>
             ) : !plan ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
@@ -203,7 +216,7 @@ function ChoosePlanDialog({
       </div>
       <DialogFooter showCloseButton>
         <Button disabled={!selected || selected === currentId || busy} onClick={() => onChoose(selected)}>
-          {busy && <Loader2 className="size-4 animate-spin" />} Confirm
+          Confirm
         </Button>
       </DialogFooter>
     </DialogContent>

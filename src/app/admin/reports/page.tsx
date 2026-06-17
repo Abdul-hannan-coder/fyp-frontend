@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Loader2,
   BedDouble,
   Wallet,
   CalendarCheck,
@@ -50,6 +49,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SimpleSelect from "@/components/ui/simple-select";
 import { FunnelChart, type FunnelStage } from "@/components/ui/funnel-chart";
+import { Skeleton, SkeletonTable } from "@/components/ui/skeleton";
 import { FeeDonut } from "@/components/dashboard/charts";
 import {
   useOverview,
@@ -119,8 +119,10 @@ function DashboardTab() {
   return (
     <>
       {loading && (
-        <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading metrics…
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
         </div>
       )}
 
@@ -234,9 +236,7 @@ function GeneratedTab() {
             <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>
           )}
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading reports…
-            </div>
+            <SkeletonTable cols={4} />
           ) : reports.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No reports generated yet — generate one to export.</p>
           ) : (
@@ -261,10 +261,10 @@ function GeneratedTab() {
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button variant="outline" size="sm" disabled={exporting} onClick={() => r.exportReport(rep.id, "pdf" as ExportFormat)}>
-                            {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />} PDF
+                            <FileText className="size-4" /> PDF
                           </Button>
                           <Button variant="outline" size="sm" disabled={exporting} onClick={() => r.exportReport(rep.id, "csv" as ExportFormat)}>
-                            {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />} CSV
+                            <FileDown className="size-4" /> CSV
                           </Button>
                           <Button variant="ghost" size="sm" disabled={busy} onClick={() => r.remove(rep.id)} aria-label="Delete report">
                             <Trash2 className="size-4 text-destructive" />
@@ -325,7 +325,7 @@ function GenerateDialog({
           </div>
         </div>
         <DialogFooter showCloseButton>
-          <Button disabled={busy} onClick={submit}>{busy && <Loader2 className="size-4 animate-spin" />} Generate</Button>
+          <Button disabled={busy} onClick={submit}>Generate</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -359,9 +359,7 @@ function KpiTab() {
           <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>
         )}
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading KPIs…
-          </div>
+          <SkeletonTable cols={4} />
         ) : kpis.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">No KPIs tracked for this module yet.</p>
         ) : (

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ClipboardCheck, Download, Loader2, X } from "lucide-react";
+import { Check, ClipboardCheck, Download, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAsync } from "@/lib/useAsync";
 import { Badge } from "@/components/ui/badge";
+import { SkeletonTable, SkeletonCards } from "@/components/ui/skeleton";
 import { attendanceApi, useAttendanceReport, useLeaveReview } from "@/lib/features/attendance";
 import { studentsApi } from "@/lib/features/students";
 
@@ -44,7 +45,7 @@ export default function WardenAttendance() {
     <>
       <PageHeader title="Attendance & leave" description={`Today · ${today}`}>
         <Button variant="outline" disabled={report.exporting} onClick={report.exportAttendance}>
-          {report.exporting ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Export
+          <Download className="size-4" /> Export
         </Button>
         <MarkAttendanceDialog today={today} onDone={daily.refetch} />
       </PageHeader>
@@ -91,7 +92,7 @@ export default function WardenAttendance() {
 
             <TabsContent value="leave">
               {loading ? (
-                <Loading />
+                <SkeletonTable cols={5} />
               ) : requests.length === 0 ? (
                 <Empty label="No leave requests." />
               ) : (
@@ -116,7 +117,7 @@ export default function WardenAttendance() {
                           {l.status === "pending" && (
                             <div className="flex justify-end gap-1.5">
                               <Button size="icon-sm" variant="outline" className="text-success" disabled={busyId === l.id} onClick={() => review(l.id, "approved")}>
-                                {busyId === l.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                                <Check className="size-4" />
                               </Button>
                               <Button size="icon-sm" variant="outline" className="text-destructive" disabled={busyId === l.id} onClick={() => review(l.id, "rejected")}>
                                 <X className="size-4" />
@@ -133,7 +134,7 @@ export default function WardenAttendance() {
 
             <TabsContent value="attendance">
               {daily.loading ? (
-                <Loading />
+                <SkeletonTable cols={3} />
               ) : (daily.data?.length ?? 0) === 0 ? (
                 <Empty label="No attendance marked for today yet." />
               ) : (
@@ -201,7 +202,7 @@ function MarkAttendanceDialog({ today, onDone }: { today: string; onDone: () => 
         </DialogHeader>
         <div className="max-h-80 space-y-2 overflow-y-auto">
           {students.loading ? (
-            <Loading />
+            <SkeletonCards count={4} />
           ) : list.length === 0 ? (
             <Empty label="No residents to mark yet." />
           ) : (
@@ -223,7 +224,7 @@ function MarkAttendanceDialog({ today, onDone }: { today: string; onDone: () => 
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={busy || list.length === 0} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Save attendance
+            Save attendance
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -231,13 +232,6 @@ function MarkAttendanceDialog({ today, onDone }: { today: string; onDone: () => 
   );
 }
 
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
-}
 function Empty({ label }: { label: string }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{label}</p>;
 }

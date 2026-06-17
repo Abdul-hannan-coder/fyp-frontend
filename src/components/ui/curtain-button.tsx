@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence, type HTMLMotionProps } from 'motion/react';
-import { Loader2 } from 'lucide-react';
+import { motion, type HTMLMotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 interface CurtainButtonProps
@@ -119,31 +118,8 @@ const CurtainButton = React.forwardRef<HTMLButtonElement, CurtainButtonProps>(
           transition={transition}
         />
 
-        <AnimatePresence mode='popLayout'>
-          {isLoading && (
-            <motion.div
-              key='loader'
-              className='absolute inset-0 z-20 flex items-center justify-center'
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '-100%' }}
-              transition={transition}
-            >
-              <Loader2
-                className={cn(
-                  'h-4 w-4 animate-spin',
-                  isHovered ? currentStyle.textHover : currentStyle.textInitial
-                )}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <motion.div
           className='relative z-10 flex h-5 flex-col items-center justify-start overflow-hidden'
-          animate={
-            isLoading ? { y: '-150%', opacity: 0 } : { y: 0, opacity: 1 }
-          }
           transition={transition}
         >
           {/* Hidden text ensures the button retains width while actual text is absolute/animating */}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Boxes, History, Loader2, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { Boxes, History, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SimpleSelect from "@/components/ui/simple-select";
+import { Skeleton, SkeletonTable } from "@/components/ui/skeleton";
 import { useAsync } from "@/lib/useAsync";
 import { roomsApi, type Room } from "@/lib/features/rooms";
 import {
@@ -133,7 +134,7 @@ function RegisterTab({
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Loading />
+          <SkeletonTable cols={6} />
         ) : assets.length === 0 ? (
           <Empty text="No assets registered yet — add a category, then an asset." />
         ) : (
@@ -242,7 +243,7 @@ function AllocationsTab({ assets }: { assets: Asset[] }) {
       <CardContent>
         {al.error && <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{al.error}</div>}
         {al.loading ? (
-          <Loading />
+          <SkeletonTable cols={5} />
         ) : al.allocations.length === 0 ? (
           <Empty text="No allocations recorded yet." />
         ) : (
@@ -287,7 +288,7 @@ function MaintenanceTab({ assets }: { assets: Asset[] }) {
       <CardContent>
         {m.error && <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{m.error}</div>}
         {m.loading ? (
-          <Loading />
+          <SkeletonTable cols={5} />
         ) : m.maintenance.length === 0 ? (
           <Empty text="No maintenance records yet." />
         ) : (
@@ -341,7 +342,7 @@ function CategoryDialog({ busy, onCreate }: { busy: boolean; onCreate: (b: { nam
           <div className="space-y-1.5"><Label htmlFor="ac-desc">Description</Label><Textarea id="ac-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional" /></div>
         </div>
         <DialogFooter showCloseButton>
-          <Button disabled={!name.trim() || busy} onClick={submit}>{busy && <Loader2 className="size-4 animate-spin" />} Create</Button>
+          <Button disabled={!name.trim() || busy} onClick={submit}>Create</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -370,7 +371,7 @@ function EditCategoryDialog({ category, busy, onUpdate }: { category: AssetCateg
           <div className="space-y-1.5"><Label htmlFor="ec-desc">Description</Label><Textarea id="ec-desc" value={description} onChange={(e) => setDescription(e.target.value)} /></div>
         </div>
         <DialogFooter showCloseButton>
-          <Button disabled={!name.trim() || busy} onClick={submit}>{busy && <Loader2 className="size-4 animate-spin" />} Save</Button>
+          <Button disabled={!name.trim() || busy} onClick={submit}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -427,7 +428,7 @@ function AssetDialog({ busy, categories, onCreate }: {
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !code.trim() || !cat || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Create asset
+            Create asset
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -493,7 +494,7 @@ function EditAssetDialog({ asset, categories, busy, onUpdate }: {
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !code.trim() || !cat || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Save
+            Save
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -515,7 +516,12 @@ function HistoryDialog({ asset, getHistory }: { asset: Asset; getHistory: (id: s
           <DialogDescription>Allocation and maintenance timeline.</DialogDescription>
         </DialogHeader>
         {q.loading ? (
-          <Loading />
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-16 w-full" />
+          </div>
         ) : q.error ? (
           <p className="py-6 text-center text-sm text-destructive">{q.error}</p>
         ) : (
@@ -612,7 +618,7 @@ function AllocationDialog({ assets, rooms, busy, onCreate }: {
           <div className="space-y-1.5"><Label htmlFor="alloc-notes">Notes</Label><Textarea id="alloc-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" /></div>
         </div>
         <DialogFooter showCloseButton>
-          <Button disabled={!asset || !room || busy} onClick={submit}>{busy && <Loader2 className="size-4 animate-spin" />} Allocate</Button>
+          <Button disabled={!asset || !room || busy} onClick={submit}>Allocate</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -667,7 +673,7 @@ function MaintenanceDialog({ assets, busy, onCreate }: {
           <div className="space-y-1.5"><Label htmlFor="mt-desc">Description</Label><Textarea id="mt-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's wrong?" /></div>
         </div>
         <DialogFooter showCloseButton>
-          <Button disabled={!asset || !description.trim() || busy} onClick={submit}>{busy && <Loader2 className="size-4 animate-spin" />} Log</Button>
+          <Button disabled={!asset || !description.trim() || busy} onClick={submit}>Log</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -675,14 +681,6 @@ function MaintenanceDialog({ assets, busy, onCreate }: {
 }
 
 // ── Helpers ──
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
-}
-
 function Empty({ text }: { text: string }) {
   return <p className="py-10 text-center text-sm text-muted-foreground">{text}</p>;
 }

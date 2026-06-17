@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeftRight, Loader2, Plus } from "lucide-react";
+import { ArrowLeftRight, Plus } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -66,9 +67,7 @@ export default function StudentTransfers() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={6} />
           ) : transfers.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
               No transfer requests yet — submit one to move rooms.
@@ -108,7 +107,7 @@ export default function StudentTransfers() {
                           disabled={t.busy === r.id}
                           onClick={() => setCancelling(r)}
                         >
-                          {t.busy === r.id ? <Loader2 className="size-4 animate-spin" /> : "Cancel"}
+                          Cancel
                         </Button>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
@@ -216,7 +215,7 @@ function RequestDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!reason.trim() || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Submit request
+            Submit request
           </Button>
         </DialogFooter>
       </DialogContent>

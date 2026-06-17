@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Camera, Check, Download, FileText, Loader2, Mail, MapPin, Phone, Plus, Trash2, Upload } from "lucide-react";
+import { Camera, Check, Download, FileText, Mail, MapPin, Phone, Plus, Trash2, Upload } from "lucide-react";
+import { Skeleton, SkeletonCards } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { Button } from "@/components/ui/button";
@@ -117,7 +118,7 @@ export default function StudentProfile() {
           <div className="flex items-center gap-2">
             <Button variant="ghost" disabled={saving} onClick={() => setEditing(false)}>Cancel</Button>
             <Button disabled={saving || !f.full_name.trim()} onClick={save}>
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save changes
+              <Check className="size-4" /> Save changes
             </Button>
           </div>
         ) : (
@@ -142,7 +143,7 @@ export default function StudentProfile() {
                 className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full border-2 border-card bg-gold text-gold-foreground disabled:opacity-50"
                 aria-label="Change photo"
               >
-                {busy ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+                <Camera className="size-4" />
               </button>
             </div>
             <div className="min-w-0">
@@ -170,8 +171,13 @@ export default function StudentProfile() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" /> Loading…
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-16" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
                 </div>
               ) : editing ? (
                 <div className="space-y-4">
@@ -225,7 +231,7 @@ export default function StudentProfile() {
             </CardHeader>
             <CardContent className="space-y-3">
               {loading ? (
-                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading…</div>
+                <SkeletonCards count={2} />
               ) : contacts.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">No emergency contacts added yet.</p>
               ) : (
@@ -287,9 +293,7 @@ function DocumentsCard() {
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div>
         )}
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading…
-          </div>
+          <SkeletonCards count={4} />
         ) : (
           <>
             {DOC_SLOTS.map((slot) => (
@@ -500,7 +504,7 @@ function AddContactDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!valid || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Add contact
+            Add contact
           </Button>
         </DialogFooter>
       </DialogContent>

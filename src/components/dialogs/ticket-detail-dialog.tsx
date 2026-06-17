@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Timeline,
   TimelineDot,
@@ -99,7 +100,7 @@ export function TicketDetailDialog({
                 </Button>
               )}
               <Button size="sm" disabled={busy} onClick={() => { onStatus(ticket.id, "resolved"); onClose(); }}>
-                {busy && <Loader2 className="size-4 animate-spin" />} Mark resolved
+                Mark resolved
               </Button>
             </div>
           )}
@@ -109,7 +110,10 @@ export function TicketDetailDialog({
             <ScrollArea className="max-h-48 pr-3">
              <div className="space-y-2">
               {loading ? (
-                <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading…</div>
+                <div className="space-y-2 py-1">
+                  <Skeleton className="h-12 w-full rounded-lg" />
+                  <Skeleton className="h-12 w-5/6 rounded-lg" />
+                </div>
               ) : comments.length === 0 ? (
                 <p className="py-3 text-sm text-muted-foreground">No comments yet.</p>
               ) : (
@@ -129,7 +133,7 @@ export function TicketDetailDialog({
               <Input value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a comment…"
                 onKeyDown={(e) => { if (e.key === "Enter") send(); }} />
               <Button size="icon" disabled={!text.trim() || commenting} onClick={send}>
-                {commenting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+                <Send className="size-4" />
               </Button>
             </div>
           </div>

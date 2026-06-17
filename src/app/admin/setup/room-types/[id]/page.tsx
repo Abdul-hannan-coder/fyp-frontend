@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, Pencil, X } from "lucide-react";
+import { ArrowLeft, Pencil, X } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Input } from "@/components/ui/input";
@@ -64,8 +65,15 @@ export default function RoomTypeDetailPage() {
 
   if (loading && !roomType) {
     return (
-      <div className="flex items-center justify-center py-24 text-muted-foreground">
-        <Loader2 className="size-5 animate-spin" />
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-56" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+        <Skeleton className="h-4 w-3/4" />
       </div>
     );
   }
@@ -152,7 +160,7 @@ export default function RoomTypeDetailPage() {
               <div className="flex justify-end gap-2 border-t pt-4">
                 <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
                 <Button type="submit" size="sm" disabled={busy}>
-                  {busy && <Loader2 className="size-4 animate-spin" />} Save changes
+                  Save changes
                 </Button>
               </div>
             </form>

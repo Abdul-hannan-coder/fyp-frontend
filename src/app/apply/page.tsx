@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BedDouble, Building2, Check, Clock, Loader2, Users } from "lucide-react";
+import { BedDouble, Building2, Check, Clock, Users } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { Stepper } from "@/components/journey/stepper";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { ButtonLink } from "@/components/ui/button-link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SimpleSelect from "@/components/ui/simple-select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/features/auth/useAuth";
 import { usePublicRoom } from "@/lib/features/public";
@@ -33,8 +34,11 @@ export default function ApplyPage() {
     <React.Suspense
       fallback={
         <Shell>
-          <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" /> Loading…
+          <div className="space-y-4 py-8">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-40 w-full rounded-2xl" />
           </div>
         </Shell>
       }
@@ -168,8 +172,13 @@ function ApplyInner() {
       {roomId && (
         <div className="mb-5 rounded-2xl border border-gold/40 bg-gold/5 p-5 shadow-sm">
           {roomLoading ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading your selected room…
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-12 shrink-0 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
             </div>
           ) : room ? (
             <div className="flex items-center gap-4">
@@ -282,7 +291,6 @@ function ApplyInner() {
         </p>
 
         <Button type="submit" size="lg" className="mt-5 w-full" disabled={!canSubmit}>
-          {submitting && <Loader2 className="size-4 animate-spin" />}
           {submitting ? "Submitting…" : "Submit application"}
         </Button>
       </form>

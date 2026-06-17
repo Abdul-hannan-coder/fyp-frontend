@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, Search, X } from "lucide-react";
+import { Check, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { useAllocationRequests } from "@/lib/features/allocation/useAllocation";
 import type { AllocationRequest } from "@/lib/features/allocation/types";
 
@@ -100,7 +101,7 @@ export default function AdminAllocations() {
                   <X className="size-4" /> Reject
                 </Button>
                 <Button disabled={busyId === live.id} onClick={() => { review(live.id, "approved"); setSelected(null); }}>
-                  {busyId === live.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Approve
+                  <Check className="size-4" /> Approve
                 </Button>
               </DialogFooter>
             )}
@@ -139,12 +140,7 @@ function ReqTable({
   onView: (r: AllocationRequest) => void;
   onReject: (r: AllocationRequest) => void;
 }) {
-  if (loading)
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </div>
-    );
+  if (loading) return <SkeletonTable cols={5} />;
   if (rows.length === 0) return <p className="py-10 text-center text-sm text-muted-foreground">No requests here.</p>;
   return (
     <Table>
@@ -168,7 +164,7 @@ function ReqTable({
               {r.status === "pending" ? (
                 <div className="flex justify-end gap-1.5">
                   <Button size="icon-sm" variant="outline" className="text-success" disabled={busyId === r.id} onClick={() => review(r.id, "approved")}>
-                    {busyId === r.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                    <Check className="size-4" />
                   </Button>
                   <Button size="icon-sm" variant="outline" className="text-destructive" disabled={busyId === r.id}
                     onClick={() => onReject(r)}>

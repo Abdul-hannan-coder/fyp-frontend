@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowRight, Check, Loader2, Search, X } from "lucide-react";
+import { ArrowRight, Check, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { useTransfers } from "@/lib/features/allocation/useTransfers";
 import type { RoomTransfer } from "@/lib/features/allocation/types";
 
@@ -119,12 +120,7 @@ function TransferTable({
   onReject: (r: RoomTransfer) => void;
   onComplete: (id: string) => void;
 }) {
-  if (loading)
-    return (
-      <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </div>
-    );
+  if (loading) return <SkeletonTable cols={5} />;
   if (rows.length === 0) return <p className="py-10 text-center text-sm text-muted-foreground">No transfers here.</p>;
 
   return (
@@ -158,7 +154,7 @@ function TransferTable({
               {r.status === "pending" ? (
                 <div className="flex justify-end gap-1.5">
                   <Button size="icon-sm" variant="outline" className="text-success" disabled={busyId === r.id} onClick={() => onApprove(r.id)}>
-                    {busyId === r.id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                    <Check className="size-4" />
                   </Button>
                   <Button size="icon-sm" variant="outline" className="text-destructive" disabled={busyId === r.id} onClick={() => onReject(r)}>
                     <X className="size-4" />
@@ -166,7 +162,7 @@ function TransferTable({
                 </div>
               ) : r.status === "approved" ? (
                 <Button size="sm" disabled={busyId === r.id} onClick={() => onComplete(r.id)}>
-                  {busyId === r.id ? <Loader2 className="size-4 animate-spin" /> : "Complete"}
+                  Complete
                 </Button>
               ) : (
                 <span className="text-xs text-muted-foreground">—</span>

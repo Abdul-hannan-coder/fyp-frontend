@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,7 +91,7 @@ export function TicketCreateDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!valid || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Submit ticket
+            Submit ticket
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, X, Loader2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { useDialog } from "@/components/ui/DialogProvider";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +80,7 @@ export function BulkActionBar({
           disabled={busy}
           className="inline-flex items-center gap-1.5 rounded-xl bg-[#E34F2D] px-3 py-1.5 text-sm font-bold text-white transition-colors duration-150 hover:bg-[#DF3714] disabled:opacity-60"
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+          <Trash2 className="h-4 w-4" />
           Supprimer
         </button>
       </div>

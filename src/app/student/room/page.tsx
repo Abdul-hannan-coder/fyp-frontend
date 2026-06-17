@@ -1,6 +1,7 @@
 "use client";
 
-import { BedDouble, Loader2, MapPin, Wind } from "lucide-react";
+import { BedDouble, MapPin, Wind } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +22,41 @@ export default function StudentRoom() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading your room…
-      </div>
+      <>
+        <PageHeader title="My room" description="Everything about your accommodation." />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex flex-wrap gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-6 w-24 rounded-md" />
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-20" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 

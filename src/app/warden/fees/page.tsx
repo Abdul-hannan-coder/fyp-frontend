@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePayments } from "@/lib/features/fees/useFees";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 const money = (v: string | number) => `₨ ${Number(v).toLocaleString()}`;
 const nameOf = (p: { student?: { user?: { full_name: string }; student_id?: string } }) =>
@@ -46,9 +46,7 @@ export default function WardenFees() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Loading…
-            </div>
+            <SkeletonTable cols={4} />
           ) : payments.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No payment records yet.</p>
           ) : (

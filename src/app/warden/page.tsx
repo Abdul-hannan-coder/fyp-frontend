@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, Loader2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -27,6 +27,7 @@ import { useAllocationRequests } from "@/lib/features/allocation/useAllocation";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { useVisitors } from "@/lib/features/visitors";
 import { useSupport } from "@/lib/features/support";
+import { SkeletonTable } from "@/components/ui/skeleton";
 
 const nameOf = (s?: { student_id?: string; user?: { full_name: string } }) =>
   s?.user?.full_name ?? s?.student_id ?? "Resident";
@@ -72,7 +73,7 @@ export default function WardenDashboard() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <Loading />
+              <SkeletonTable cols={3} />
             ) : requests.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">No pending requests.</p>
             ) : (
@@ -208,13 +209,5 @@ export default function WardenDashboard() {
         onConfirm={(reason) => { if (pending) { review(pending.id, "rejected", reason || "Rejected"); setPending(null); } }}
       />
     </>
-  );
-}
-
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
   );
 }

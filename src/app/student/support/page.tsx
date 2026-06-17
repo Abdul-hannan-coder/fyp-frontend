@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
+import { SkeletonCards } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/dashboard/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,9 +23,7 @@ export default function StudentSupport() {
       {error && <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error}</div>}
 
       {loading ? (
-        <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading…
-        </div>
+        <SkeletonCards count={4} />
       ) : tickets.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Pencil, Plus, Trash2, Receipt } from "lucide-react";
+import { Pencil, Plus, Trash2, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SimpleSelect from "@/components/ui/simple-select";
+import { SkeletonGrid, SkeletonTable } from "@/components/ui/skeleton";
 import {
   useMessPlans,
   useAdminMess,
@@ -121,7 +122,7 @@ function PlansTab({ plansHook }: { plansHook: ReturnType<typeof useMessPlans> })
       )}
 
       {loading ? (
-        <Loading />
+        <SkeletonGrid count={6} />
       ) : plans.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No mess plans yet — add your first plan.</p>
       ) : (
@@ -194,7 +195,7 @@ function PlanDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !price || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Create plan
+            Create plan
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -264,7 +265,7 @@ function EditPlanDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !price || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Save changes
+            Save changes
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -295,7 +296,7 @@ function DeletePlanDialog({
         </DialogHeader>
         <DialogFooter showCloseButton>
           <Button variant="destructive" disabled={busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Delete plan
+            Delete plan
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -325,7 +326,7 @@ function MenuTab({ admin }: { admin: ReturnType<typeof useAdminMess> }) {
         </CardHeader>
         <CardContent>
           {menuLoading ? (
-            <Loading />
+            <SkeletonTable cols={4} />
           ) : menu.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No menu entries yet — add one.</p>
           ) : (
@@ -408,7 +409,7 @@ function MenuDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!date || parsedItems.length === 0 || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Add entry
+            Add entry
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -456,7 +457,7 @@ function BillingTab({ admin }: { admin: ReturnType<typeof useAdminMess> }) {
         </CardHeader>
         <CardContent>
           {reportLoading ? (
-            <Loading />
+            <SkeletonTable cols={5} />
           ) : bills.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No bills for this period — generate bills to begin.</p>
           ) : (
@@ -529,7 +530,7 @@ function GenerateBillingDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} Generate
+            Generate
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -562,7 +563,7 @@ function SubscriptionsTab({ admin }: { admin: ReturnType<typeof useAdminMess> })
         </CardHeader>
         <CardContent>
           {subsLoading ? (
-            <Loading />
+            <SkeletonTable cols={5} />
           ) : subscriptions.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">No subscriptions yet.</p>
           ) : (
@@ -595,12 +596,3 @@ function SubscriptionsTab({ admin }: { admin: ReturnType<typeof useAdminMess> })
   );
 }
 
-/* ───────────────────────── shared ───────────────────────── */
-
-function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
-}

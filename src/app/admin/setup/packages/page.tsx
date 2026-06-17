@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -270,7 +271,7 @@ function PackageDialog({
         </div>
         <DialogFooter showCloseButton>
           <Button disabled={!name.trim() || !roomId || busy} onClick={submit}>
-            {busy && <Loader2 className="size-4 animate-spin" />} {mode === "create" ? "Create package" : "Save"}
+            {mode === "create" ? "Create package" : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -280,11 +281,7 @@ function PackageDialog({
 
 // ── Helpers ──
 function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-      <Loader2 className="size-4 animate-spin" /> Loading…
-    </div>
-  );
+  return <SkeletonTable cols={6} />;
 }
 
 function Empty({ text }: { text: string }) {
