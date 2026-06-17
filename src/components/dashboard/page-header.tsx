@@ -28,19 +28,28 @@ const HREF_LABEL: Record<string, string> = (() => {
   return map;
 })();
 
+// True for route ids we never want to show raw in the UI: UUIDs (with dashes),
+// long hex strings, or plain numbers.
+function isId(segment: string): boolean {
+  return (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment) ||
+    /^[0-9a-f]{16,}$/i.test(segment) ||
+    /^\d+$/.test(segment)
+  );
+}
+
 function prettify(segment: string): string {
-  // Ids (uuids / numbers) get a generic label rather than a raw key.
-  if (/^[0-9a-f]{8,}$/i.test(segment) || /^\d+$/.test(segment)) return "Detail";
+  if (isId(segment)) return "Detail";
   return segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function useCrumbs() {
   const pathname = usePathname();
-  const crumbs: { href: string; label: string }[] = [];
+  const crumbs: { href: string; label: string; isId: boolean }[] = [];
   let acc = "";
   for (const seg of pathname.split("/").filter(Boolean)) {
     acc += `/${seg}`;
-    crumbs.push({ href: acc, label: HREF_LABEL[acc] ?? prettify(seg) });
+    crumbs.push({ href: acc, label: HREF_LABEL[acc] ?? prettify(seg), isId: isId(seg) });
   }
   return crumbs;
 }
@@ -63,11 +72,14 @@ export function PageHeader({
           <BreadcrumbList>
             {crumbs.map((c, i) => {
               const last = i === crumbs.length - 1;
+              // On a detail page the final segment is an id — show the page
+              // title (e.g. the person's name) instead of "Detail" or a raw id.
+              const label = last && c.isId ? title : c.label;
               return (
                 <React.Fragment key={c.href}>
                   <BreadcrumbItem>
                     {last ? (
-                      <BreadcrumbPage>{c.label}</BreadcrumbPage>
+                      <BreadcrumbPage>{label}</BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink render={<Link href={c.href} />}>{c.label}</BreadcrumbLink>
                     )}
