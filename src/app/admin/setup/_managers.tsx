@@ -181,7 +181,7 @@ export function BlocksManager() {
         </div>
       )}
       <ConfirmDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)} title="Delete block" destructive
-        description={deleting ? `Delete "${deleting.name}"? Its floors and rooms must be empty.` : ""}
+        description={deleting ? `Delete "${deleting.name}"? This also removes its floors and all its rooms, along with any allocations on them.` : ""}
         confirmLabel="Delete" busy={s.busy}
         onConfirm={async () => { if (deleting) { await s.deleteBlock(deleting.id); setDeleting(null); } }} />
     </div>
@@ -238,7 +238,7 @@ export function FloorsManager() {
         </div>
       )}
       <ConfirmDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)} title="Delete floor" destructive
-        description={deleting ? `Delete Floor ${deleting.floor_number} (${deleting.block?.name ?? "block"})? Its rooms must be empty.` : ""}
+        description={deleting ? `Delete Floor ${deleting.floor_number} (${deleting.block?.name ?? "block"})? This also removes all its rooms and any allocations on them.` : ""}
         confirmLabel="Delete" busy={s.busy}
         onConfirm={async () => { if (deleting) { await s.deleteFloor(deleting.id); setDeleting(null); } }} />
     </div>
@@ -305,7 +305,7 @@ export function RoomTypesManager() {
         </div>
       )}
       <ConfirmDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)} title="Delete room type" destructive
-        description={deleting ? `Delete "${deleting.name}"? Rooms using it must be reassigned first.` : ""}
+        description={deleting ? `Delete "${deleting.name}"? Every room of this type is removed automatically, along with any allocations on them.` : ""}
         confirmLabel="Delete" busy={s.busy}
         onConfirm={async () => { if (deleting) { await s.deleteRoomType(deleting.id); setDeleting(null); } }} />
     </div>
@@ -486,7 +486,7 @@ export function RoomsManager() {
         </div>
       )}
       <ConfirmDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)} title="Delete room" destructive
-        description={deleting ? `Delete room ${deleting.room_number}? It must not have an active resident.` : ""}
+        description={deleting ? `Delete room ${deleting.room_number}? Any active allocation on it is removed too.` : ""}
         confirmLabel="Delete" busy={s.busy}
         onConfirm={async () => { if (deleting) { await s.deleteRoom(deleting.id); setDeleting(null); } }} />
     </div>
