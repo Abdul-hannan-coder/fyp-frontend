@@ -73,7 +73,7 @@ export const publicApi = {
 };
 
 export function usePublicRoomTypes() {
-  const q = useAsync(() => publicApi.roomTypes(), []);
+  const q = useAsync(() => publicApi.roomTypes(), [], { key: "public:room-types" });
   return { roomTypes: q.data ?? [], loading: q.loading, error: q.error };
 }
 
@@ -106,28 +106,32 @@ const roomsApi = {
 };
 
 export function usePublicRooms() {
-  const q = useAsync(() => roomsApi.rooms(), []);
+  const q = useAsync(() => roomsApi.rooms(), [], { key: "public:rooms" });
   return { rooms: q.data ?? [], loading: q.loading, error: q.error };
 }
 
 export function usePublicRoom(id: string | null) {
-  const q = useAsync(() => (id ? roomsApi.roomById(id) : Promise.resolve(null)), [id ?? ""], { enabled: !!id });
+  const q = useAsync(() => (id ? roomsApi.roomById(id) : Promise.resolve(null)), [id ?? ""], {
+    enabled: !!id,
+    key: `public:room:${id ?? ""}`,
+  });
   return { room: q.data ?? null, loading: q.loading, error: q.error };
 }
 
 export function usePublicPackages() {
-  const q = useAsync(() => publicApi.packages(), []);
+  const q = useAsync(() => publicApi.packages(), [], { key: "public:packages" });
   return { packages: q.data ?? [], loading: q.loading, error: q.error };
 }
 
 export function usePublicPackage(id: string | null) {
   const q = useAsync(() => (id ? publicApi.packageById(id) : Promise.resolve(null)), [id ?? ""], {
     enabled: !!id,
+    key: `public:package:${id ?? ""}`,
   });
   return { pkg: q.data ?? null, loading: q.loading, error: q.error };
 }
 
 export function usePublicOverview() {
-  const q = useAsync(() => publicApi.overview(), []);
+  const q = useAsync(() => publicApi.overview(), [], { key: "public:overview" });
   return { overview: q.data, loading: q.loading };
 }

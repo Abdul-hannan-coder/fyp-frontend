@@ -14,8 +14,27 @@ export type Payment = {
   transaction_reference?: string | null;
   receipt_number?: string | null;
   status: PaymentStatus;
-  feeStructure?: { id: string; name: string; fee_type: string };
-  student?: { id: string; student_id?: string; user?: { full_name: string; email: string } };
+  verified_at?: string | null;
+  verified_by?: string | null;
+  created_at?: string;
+  createdAt?: string;
+  feeStructure?: {
+    id: string;
+    name: string;
+    fee_type: string;
+    amount?: string;
+    academic_year?: string;
+    semester?: string;
+    is_mandatory?: boolean;
+  };
+  student?: {
+    id: string;
+    student_id?: string;
+    department?: string;
+    user?: { full_name?: string; email?: string; phone?: string };
+  };
+  allocation?: { id: string; bed_number?: number | null; room_id?: string | null } | null;
+  verifier?: { id: string; email?: string; full_name?: string } | null;
 };
 
 export type FeeStructure = {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Check, Eye, FileText, Plus, RefreshCw, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -47,11 +48,12 @@ import { useAsync } from "@/lib/useAsync";
 import { roomsApi } from "@/lib/features/rooms";
 
 const money = (v: string | number) => `₨ ${Number(v).toLocaleString()}`;
-const nameOf = (p: { student?: { user?: { full_name: string }; student_id?: string } }) =>
+const nameOf = (p: { student?: { user?: { full_name?: string }; student_id?: string } }) =>
   p.student?.user?.full_name ?? p.student?.student_id ?? "Resident";
 const FEE_TYPES = ["hostel_rent", "security_deposit", "mess_fee", "maintenance", "late_fee", "other"];
 
 export default function AdminFinance() {
+  const router = useRouter();
   const { payments, loading, error, verify, busyId, refetch } = usePayments();
   const { fees } = useFeeDashboard();
   const fs = useFeeStructures();
@@ -165,7 +167,14 @@ export default function AdminFinance() {
             <p className="py-8 text-center text-sm text-muted-foreground">Nothing to verify right now.</p>
           ) : (
             pending.map((p) => (
-              <div key={p.id} className="flex flex-col gap-3 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                key={p.id}
+                role="button"
+                tabIndex={0}
+                className="flex cursor-pointer flex-col gap-3 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                onClick={() => router.push(`/admin/finance/${p.id}`)}
+                onKeyDown={(e) => { if (e.key === "Enter") router.push(`/admin/finance/${p.id}`); }}
+              >
                 <div className="flex items-start gap-3">
                   <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                     <FileText className="size-5" />
@@ -180,7 +189,7 @@ export default function AdminFinance() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 sm:shrink-0">
+                <div className="flex items-center gap-2 sm:shrink-0" onClick={(e) => e.stopPropagation()}>
                   <ViewProofButton paymentId={p.id} />
                   <Button variant="outline" size="sm" className="text-destructive" disabled={busyId === p.id}
                     onClick={() => setRejecting(p)}>
@@ -260,7 +269,11 @@ export default function AdminFinance() {
               </TableHeader>
               <TableBody>
                 {visiblePayments.map((p) => (
-                  <TableRow key={p.id}>
+                  <TableRow
+                    key={p.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/admin/finance/${p.id}`)}
+                  >
                     <TableCell className="font-medium">{nameOf(p)}</TableCell>
                     <TableCell className="text-muted-foreground">{p.feeStructure?.name ?? "Hostel fee"}</TableCell>
                     <TableCell>{money(p.total_amount)}</TableCell>

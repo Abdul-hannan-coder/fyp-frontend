@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type Asset = {
   id: string;
@@ -139,8 +140,8 @@ export const assetsApi = {
 };
 
 export function useAssets() {
-  const q = useAsync(() => assetsApi.list(), []);
-  const catsQ = useAsync(() => assetsApi.categories(), []);
+  const q = useAsync(() => assetsApi.list(), [], { key: "assets" });
+  const catsQ = useAsync(() => assetsApi.categories(), [], { key: "assets:categories" });
   const [busy, setBusy] = React.useState(false);
 
   const wrap = async (fn: () => Promise<unknown>, ok: string, refetchCats = false) => {
@@ -148,6 +149,7 @@ export function useAssets() {
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature("assets");
       await q.refetch();
       if (refetchCats) await catsQ.refetch();
       return true;
@@ -181,7 +183,7 @@ export function useAssets() {
 }
 
 export function useAssetAllocations() {
-  const q = useAsync(() => assetsApi.allocations(), []);
+  const q = useAsync(() => assetsApi.allocations(), [], { key: "assets:allocations" });
   const [busy, setBusy] = React.useState(false);
 
   const create = async (b: AllocationInput) => {
@@ -189,6 +191,7 @@ export function useAssetAllocations() {
     try {
       await assetsApi.createAllocation(b);
       toast.success("Asset allocated");
+      invalidateFeature("assets");
       await q.refetch();
       return true;
     } catch (err) {
@@ -210,7 +213,7 @@ export function useAssetAllocations() {
 }
 
 export function useAssetMaintenance() {
-  const q = useAsync(() => assetsApi.maintenance(), []);
+  const q = useAsync(() => assetsApi.maintenance(), [], { key: "assets:maintenance" });
   const [busy, setBusy] = React.useState(false);
 
   const create = async (b: MaintenanceInput) => {
@@ -218,6 +221,7 @@ export function useAssetMaintenance() {
     try {
       await assetsApi.createMaintenance(b);
       toast.success("Maintenance logged");
+      invalidateFeature("assets");
       await q.refetch();
       return true;
     } catch (err) {

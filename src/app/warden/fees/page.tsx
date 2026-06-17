@@ -16,7 +16,7 @@ import { usePayments } from "@/lib/features/fees/useFees";
 import { SkeletonTable } from "@/components/ui/skeleton";
 
 const money = (v: string | number) => `₨ ${Number(v).toLocaleString()}`;
-const nameOf = (p: { student?: { user?: { full_name: string }; student_id?: string } }) =>
+const nameOf = (p: { student?: { user?: { full_name?: string }; student_id?: string } }) =>
   p.student?.user?.full_name ?? p.student?.student_id ?? "Resident";
 
 export default function WardenFees() {

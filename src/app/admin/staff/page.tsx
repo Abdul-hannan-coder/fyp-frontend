@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2, UserCog } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatusBadge } from "@/components/dashboard/status-badge";
@@ -110,6 +111,7 @@ function IconButton({ title, onClick, danger }: { title: string; onClick: () => 
 // ════════════════════════════════ MEMBERS ════════════════════════════════
 
 function MembersTab({ st, users }: { st: UseStaff; users: ManagedUser[] }) {
+  const router = useRouter();
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between">
@@ -134,14 +136,18 @@ function MembersTab({ st, users }: { st: UseStaff; users: ManagedUser[] }) {
             </TableHeader>
             <TableBody>
               {st.staff.map((s) => (
-                <TableRow key={s.id}>
+                <TableRow
+                  key={s.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/admin/staff/${s.id}`)}
+                >
                   <TableCell className="font-medium">{staffLabel(s)}</TableCell>
                   <TableCell className="text-muted-foreground">{s.role?.name ?? s.staffRole?.name ?? "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{s.phone ?? "—"}</TableCell>
                   <TableCell>
                     <StatusBadge status={s.employment_status ?? "active"} />
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <MemberDialog busy={st.busy} roles={st.roles} users={users} edit={s} onUpdate={st.updateMember} />
                     <IconButton
                       title="Remove"

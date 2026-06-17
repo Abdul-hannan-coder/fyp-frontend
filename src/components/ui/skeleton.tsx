@@ -7,7 +7,7 @@ export function SkeletonCards({ count = 4, className = "" }: { count?: number; c
   return (
     <div className={`space-y-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-start gap-4 rounded-3xl border border-slate-100/80 bg-white p-5">
+        <div key={i} className="flex items-start gap-4 rounded-3xl border border-border bg-card p-5">
           <Skeleton className="h-10 w-10 rounded-xl" />
           <div className="flex-1 space-y-2.5 py-0.5">
             <Skeleton className="h-3 w-24" />
@@ -23,13 +23,13 @@ export function SkeletonCards({ count = 4, className = "" }: { count?: number; c
 
 export function SkeletonTable({ rows = 6, cols = 4, className = "" }: { rows?: number; cols?: number; className?: string }) {
   return (
-    <div className={`overflow-hidden rounded-3xl border border-slate-100/80 bg-white ${className}`}>
-      <div className="bg-slate-50 px-5 py-4 flex gap-4">
+    <div className={`overflow-hidden rounded-3xl border border-border bg-card ${className}`}>
+      <div className="bg-muted/50 px-5 py-4 flex gap-4">
         {Array.from({ length: cols }).map((_, i) => (
           <Skeleton key={i} className="h-3 flex-1" />
         ))}
       </div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-border">
         {Array.from({ length: rows }).map((_, r) => (
           <div key={r} className="px-5 py-4 flex items-center gap-4">
             {Array.from({ length: cols }).map((_, c) => (
@@ -46,7 +46,7 @@ export function SkeletonGrid({ count = 9, className = "" }: { count?: number; cl
   return (
     <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${className}`}>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3.5">
+        <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5">
           <Skeleton className="h-5 w-5 rounded-md" />
           <Skeleton className="h-3.5 w-2/3" />
         </div>

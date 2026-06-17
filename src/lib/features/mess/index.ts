@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type MessPlan = {
   id: string;
@@ -122,7 +123,9 @@ export const MESS_PLAN_STATUSES = ["active", "inactive"] as const;
 export const MENU_MEAL_TYPES = ["breakfast", "lunch", "dinner"] as const;
 
 export function useMessPlans(admin = false) {
-  const q = useAsync(() => (admin ? messApi.adminPlans() : messApi.plans()), [admin]);
+  const q = useAsync(() => (admin ? messApi.adminPlans() : messApi.plans()), [admin], {
+    key: "mess:plans",
+  });
   const [busy, setBusy] = React.useState(false);
 
   const wrap = async (fn: () => Promise<unknown>, ok: string) => {
@@ -130,6 +133,7 @@ export function useMessPlans(admin = false) {
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature("mess");
       await q.refetch();
       return true;
     } catch (err) {
@@ -159,10 +163,13 @@ export function useAdminMess() {
   const menuQ = useAsync(
     () => (menuDate ? messApi.menuByDate(menuDate) : messApi.adminMenu()),
     [menuDate],
+    { key: "mess:menu" },
   );
-  const subsQ = useAsync(() => messApi.adminSubscriptions(), []);
+  const subsQ = useAsync(() => messApi.adminSubscriptions(), [], { key: "mess:subscriptions" });
   const [reportMonth, setReportMonth] = React.useState<string>("");
-  const reportQ = useAsync(() => messApi.billingReport(reportMonth || undefined), [reportMonth]);
+  const reportQ = useAsync(() => messApi.billingReport(reportMonth || undefined), [reportMonth], {
+    key: "mess:billing",
+  });
   const [busy, setBusy] = React.useState(false);
 
   const createMenu = async (body: CreateMenuInput) => {
@@ -170,6 +177,7 @@ export function useAdminMess() {
     try {
       await messApi.createMenu(body);
       toast.success("Menu entry added");
+      invalidateFeature("mess");
       await menuQ.refetch();
       return true;
     } catch (err) {
@@ -185,6 +193,7 @@ export function useAdminMess() {
     try {
       const bills = await messApi.generateBilling(body);
       toast.success(`Generated ${Array.isArray(bills) ? bills.length : 0} bill(s)`);
+      invalidateFeature("mess");
       await reportQ.refetch();
       return true;
     } catch (err) {
@@ -216,15 +225,15 @@ export function useAdminMess() {
 }
 
 export function useMessMenu() {
-  const q = useAsync(() => messApi.menu(), []);
+  const q = useAsync(() => messApi.menu(), [], { key: "mess:menu" });
   return { menu: q.data ?? [], loading: q.loading, error: q.error };
 }
 
 /** Student mess hook: plan + available plans + billing, with change/subscribe/pay actions. */
 export function useMyMess() {
-  const planQ = useAsync(() => messApi.myPlan(), []);
-  const plansQ = useAsync(() => messApi.plans(), []);
-  const billsQ = useAsync(() => messApi.billing(), []);
+  const planQ = useAsync(() => messApi.myPlan(), [], { key: "mess" });
+  const plansQ = useAsync(() => messApi.plans(), [], { key: "mess:plans" });
+  const billsQ = useAsync(() => messApi.billing(), [], { key: "mess:billing:my" });
   const [busy, setBusy] = React.useState(false);
 
   const refetch = async () => {
@@ -238,6 +247,7 @@ export function useMyMess() {
       if (planQ.data?.id) await messApi.changePlan(planId);
       else await messApi.subscribe(planId);
       toast.success("Mess plan updated");
+      invalidateFeature("mess");
       await refetch();
       return true;
     } catch (err) {
@@ -253,6 +263,7 @@ export function useMyMess() {
     try {
       await messApi.payBill(id);
       toast.success("Bill paid");
+      invalidateFeature("mess");
       await billsQ.refetch();
     } catch (err) {
       toast.error((err as Error).message);

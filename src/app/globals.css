@@ -212,6 +212,16 @@
   animation: sh-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Loading skeleton — theme-aware pulsing block (works in dark mode). */
+@keyframes sh-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.skeleton {
+  background-color: var(--muted);
+  animation: sh-pulse 1.5s ease-in-out infinite;
+}
+
 /* Slim, themed scrollbar for in-app scroll areas (sidebar, menus). */
 .scroll-slim {
   scrollbar-width: thin;                                   /* Firefox */

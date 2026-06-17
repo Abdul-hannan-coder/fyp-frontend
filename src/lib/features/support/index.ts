@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type Ticket = {
   id: string;
@@ -40,7 +41,10 @@ export type TicketComment = {
 };
 
 export function useTicketComments(ticketId: string | null) {
-  const q = useAsync(() => supportApi.comments(ticketId!), [ticketId], { enabled: !!ticketId });
+  const q = useAsync(() => supportApi.comments(ticketId!), [ticketId], {
+    enabled: !!ticketId,
+    key: `support:${ticketId ?? ""}`,
+  });
   const [busy, setBusy] = React.useState(false);
 
   const add = async (comment: string) => {
@@ -48,6 +52,7 @@ export function useTicketComments(ticketId: string | null) {
     setBusy(true);
     try {
       await supportApi.addComment(ticketId, comment);
+      invalidateFeature("support");
       await q.refetch();
       return true;
     } catch (err) {
@@ -62,7 +67,9 @@ export function useTicketComments(ticketId: string | null) {
 }
 
 export function useSupport(scope: "all" | "mine" = "all") {
-  const q = useAsync(() => (scope === "mine" ? supportApi.mine() : supportApi.list()), [scope]);
+  const q = useAsync(() => (scope === "mine" ? supportApi.mine() : supportApi.list()), [scope], {
+    key: scope === "mine" ? "support:tickets:mine" : "support:tickets",
+  });
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const setStatus = async (id: string, status: string) => {
@@ -70,6 +77,7 @@ export function useSupport(scope: "all" | "mine" = "all") {
     try {
       await supportApi.updateStatus(id, status);
       toast.success("Ticket updated");
+      invalidateFeature("support");
       await q.refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -83,6 +91,7 @@ export function useSupport(scope: "all" | "mine" = "all") {
     try {
       await supportApi.assign(id);
       toast.success("Ticket assigned to you");
+      invalidateFeature("support");
       await q.refetch();
       return true;
     } catch (err) {
@@ -97,6 +106,7 @@ export function useSupport(scope: "all" | "mine" = "all") {
     try {
       await supportApi.create(body);
       toast.success("Ticket created");
+      invalidateFeature("support");
       await q.refetch();
       return true;
     } catch (err) {

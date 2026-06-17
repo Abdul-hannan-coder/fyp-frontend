@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type Amenity = {
   id: string;
@@ -29,7 +30,7 @@ export const amenitiesApi = {
 };
 
 export function useAmenities() {
-  const q = useAsync(() => amenitiesApi.list(), []);
+  const q = useAsync(() => amenitiesApi.list(), [], { key: "amenities" });
   const [busy, setBusy] = React.useState(false);
 
   const wrap = async (fn: () => Promise<unknown>, ok: string) => {
@@ -37,6 +38,7 @@ export function useAmenities() {
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature("amenities");
       await q.refetch();
       return true;
     } catch (err) {

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Check, RotateCcw, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -36,6 +37,7 @@ const money = (v: string | number) => `₨ ${Number(v).toLocaleString()}`;
 const studentName = (r: Refund) => r.student?.user?.full_name ?? r.student?.user?.email ?? "—";
 
 export default function AdminRefunds() {
+  const router = useRouter();
   const rf = useRefunds();
   const { refunds, loading, error } = rf;
   const [reviewTarget, setReviewTarget] = React.useState<{ refund: Refund; action: "approved" | "rejected" } | null>(null);
@@ -89,14 +91,18 @@ export default function AdminRefunds() {
                 {refunds.map((r) => {
                   const busy = rf.busyId === r.id;
                   return (
-                    <TableRow key={r.id}>
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/refunds/${r.id}`)}
+                    >
                       <TableCell className="font-medium">{studentName(r)}</TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground">{r.payment?.receipt_number ?? "—"}</TableCell>
                       <TableCell>{money(r.amount)}</TableCell>
                       <TableCell className="max-w-[18rem] truncate text-muted-foreground" title={r.reason}>{r.reason}</TableCell>
                       <TableCell><StatusBadge status={r.status} /></TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                           {r.status === "pending" && (
                             <>
                               <Button size="sm" variant="outline" disabled={busy} onClick={() => setReviewTarget({ refund: r, action: "approved" })}>

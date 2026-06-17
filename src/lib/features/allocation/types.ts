@@ -13,7 +13,10 @@ export type Allocation = {
   academic_year: string;
   semester: string;
   status: AllocationStatus;
+  allocation_date?: string | null;
   check_in_date?: string | null;
+  expected_checkout_date?: string | null;
+  actual_checkout_date?: string | null;
   room?: {
     id: string;
     room_number: string;
@@ -21,7 +24,7 @@ export type Allocation = {
     roomType?: { name: string };
     block?: { id: string; name: string };
   };
-  student?: { id: string; student_id?: string; user?: { full_name: string } };
+  student?: { id: string; student_id?: string; user?: { full_name: string; phone?: string } };
 };
 
 export type AllocationRequest = {

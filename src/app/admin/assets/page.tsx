@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Boxes, History, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -127,6 +128,7 @@ function RegisterTab({
   onDelete: (id: string) => Promise<boolean>;
   getHistory: (id: string) => Promise<AssetHistory>;
 }) {
+  const router = useRouter();
   return (
     <Card>
       <CardHeader>
@@ -151,14 +153,19 @@ function RegisterTab({
             </TableHeader>
             <TableBody>
               {assets.map((x) => (
-                <TableRow key={x.id}>
+                <TableRow
+                  key={x.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/admin/assets/${x.id}`)}
+                >
                   <TableCell className="font-mono text-xs text-muted-foreground">{x.asset_code ?? "—"}</TableCell>
                   <TableCell className="font-medium">{x.name}</TableCell>
                   <TableCell className="text-muted-foreground">{x.category?.name ?? "—"}</TableCell>
                   <TableCell className="capitalize text-muted-foreground">{x.condition ?? "—"}</TableCell>
                   <TableCell><StatusBadge status={x.status ?? "available"} /></TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                    {/* Stop row navigation when interacting with the row actions. */}
+                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                       <HistoryDialog asset={x} getHistory={getHistory} />
                       <EditAssetDialog asset={x} categories={categories} busy={busy} onUpdate={onUpdate} />
                       <Button variant="ghost" size="icon" disabled={busy} onClick={() => onDelete(x.id)} aria-label="Delete asset">

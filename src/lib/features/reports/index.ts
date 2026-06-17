@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { API_URL, http, tokenStore, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 // ── Dashboard metric shapes (GET /reports/dashboards/:type) ──
 export type OccupancyMetrics = {
@@ -182,23 +183,23 @@ export async function downloadReport(id: string, format: ExportFormat): Promise<
 
 // The overview dashboard powers admin + warden home pages.
 export function useOverview() {
-  const q = useAsync(() => reportsApi.dashboard<OverviewMetrics>("overview"), []);
+  const q = useAsync(() => reportsApi.dashboard<OverviewMetrics>("overview"), [], { key: "reports:overview" });
   return { overview: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
 }
 
 export function useFeeDashboard() {
-  const q = useAsync(() => reportsApi.feeDashboard(), []);
+  const q = useAsync(() => reportsApi.feeDashboard(), [], { key: "reports:fee-dashboard" });
   return { fees: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
 }
 
 export function useSupportDashboard() {
-  const q = useAsync(() => reportsApi.supportDashboard(), []);
+  const q = useAsync(() => reportsApi.supportDashboard(), [], { key: "reports:support-dashboard" });
   return { support: q.data, loading: q.loading, error: q.error };
 }
 
 // Generated-report management: list + generate + delete + export.
 export function useReports() {
-  const q = useAsync(() => reportsApi.list(), []);
+  const q = useAsync(() => reportsApi.list(), [], { key: "reports:list" });
   const [busy, setBusy] = React.useState(false);
   const [exportingId, setExportingId] = React.useState<string | null>(null);
 
@@ -207,6 +208,7 @@ export function useReports() {
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature("reports");
       await q.refetch();
       return true;
     } catch (err) {
@@ -249,7 +251,7 @@ export function useKpis(moduleName: string, enabled = true) {
   const q = useAsync(
     () => reportsApi.kpi(moduleName),
     [moduleName],
-    { enabled: enabled && !!moduleName },
+    { enabled: enabled && !!moduleName, key: `reports:kpi:${moduleName}` },
   );
   return { kpis: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch };
 }

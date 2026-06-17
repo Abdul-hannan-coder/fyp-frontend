@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 // ── Types ──
 
@@ -15,7 +16,9 @@ export type StaffMember = {
   phone?: string;
   employment_status?: string;
   salary_grade?: string;
-  user?: { id: string; full_name: string; email: string };
+  joining_date?: string;
+  createdAt?: string;
+  user?: { id: string; full_name: string; email: string; phone?: string };
   role?: { id: string; name: string };
   staffRole?: { name: string };
   assignedBlock?: { name: string };
@@ -142,6 +145,8 @@ export const staffApi = {
 
   // members
   list: () => http.get<unknown>("/staff?limit=100").then((d) => unwrapList<StaffMember>(d, "staff")),
+  getById: (id: string) =>
+    http.get<unknown>(`/staff/${id}`).then((d) => unwrapOne<StaffMember>(d, "staff")),
   createMember: (body: MemberCreate) =>
     http.post<unknown>("/staff", body).then((d) => unwrapOne<StaffMember>(d, "staff")),
   updateMember: (id: string, body: MemberUpdate) =>
@@ -169,18 +174,18 @@ export const staffApi = {
 // ── Hook ──
 
 export function useStaff() {
-  const q = useAsync(() => staffApi.list(), []);
-  const rolesQ = useAsync(() => staffApi.roles(), []);
-  const dutiesQ = useAsync(() => staffApi.duties(), []);
-  const schedulesQ = useAsync(() => staffApi.schedules(), []);
+  const q = useAsync(() => staffApi.list(), [], { key: "staff" });
+  const rolesQ = useAsync(() => staffApi.roles(), [], { key: "staff:roles" });
+  const dutiesQ = useAsync(() => staffApi.duties(), [], { key: "staff:duties" });
+  const schedulesQ = useAsync(() => staffApi.schedules(), [], { key: "staff:schedules" });
   const [busy, setBusy] = React.useState(false);
 
-  const wrap = async (fn: () => Promise<unknown>, ok: string, refetch: () => Promise<unknown>) => {
+  const wrap = async (fn: () => Promise<unknown>, ok: string) => {
     setBusy(true);
     try {
       await fn();
       toast.success(ok);
-      await refetch();
+      invalidateFeature("staff");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -204,24 +209,24 @@ export function useStaff() {
     busy,
 
     // roles
-    createRole: (b: RoleCreate) => wrap(() => staffApi.createRole(b), "Staff role created", rolesQ.refetch),
-    updateRole: (id: string, b: RoleUpdate) => wrap(() => staffApi.updateRole(id, b), "Staff role updated", rolesQ.refetch),
-    deleteRole: (id: string) => wrap(() => staffApi.deleteRole(id), "Staff role deleted", rolesQ.refetch),
+    createRole: (b: RoleCreate) => wrap(() => staffApi.createRole(b), "Staff role created"),
+    updateRole: (id: string, b: RoleUpdate) => wrap(() => staffApi.updateRole(id, b), "Staff role updated"),
+    deleteRole: (id: string) => wrap(() => staffApi.deleteRole(id), "Staff role deleted"),
 
     // members
-    createMember: (b: MemberCreate) => wrap(() => staffApi.createMember(b), "Staff member added", q.refetch),
-    updateMember: (id: string, b: MemberUpdate) => wrap(() => staffApi.updateMember(id, b), "Staff member updated", q.refetch),
-    deleteMember: (id: string) => wrap(() => staffApi.deleteMember(id), "Staff member removed", q.refetch),
+    createMember: (b: MemberCreate) => wrap(() => staffApi.createMember(b), "Staff member added"),
+    updateMember: (id: string, b: MemberUpdate) => wrap(() => staffApi.updateMember(id, b), "Staff member updated"),
+    deleteMember: (id: string) => wrap(() => staffApi.deleteMember(id), "Staff member removed"),
 
     // duties
-    createDuty: (b: DutyCreate) => wrap(() => staffApi.createDuty(b), "Duty assigned", dutiesQ.refetch),
-    updateDuty: (id: string, b: DutyUpdate) => wrap(() => staffApi.updateDuty(id, b), "Duty updated", dutiesQ.refetch),
-    deleteDuty: (id: string) => wrap(() => staffApi.deleteDuty(id), "Duty deleted", dutiesQ.refetch),
+    createDuty: (b: DutyCreate) => wrap(() => staffApi.createDuty(b), "Duty assigned"),
+    updateDuty: (id: string, b: DutyUpdate) => wrap(() => staffApi.updateDuty(id, b), "Duty updated"),
+    deleteDuty: (id: string) => wrap(() => staffApi.deleteDuty(id), "Duty deleted"),
 
     // schedules
-    createSchedule: (b: ScheduleCreate) => wrap(() => staffApi.createSchedule(b), "Schedule created", schedulesQ.refetch),
+    createSchedule: (b: ScheduleCreate) => wrap(() => staffApi.createSchedule(b), "Schedule created"),
     updateSchedule: (id: string, b: ScheduleUpdate) =>
-      wrap(() => staffApi.updateSchedule(id, b), "Schedule updated", schedulesQ.refetch),
-    deleteSchedule: (id: string) => wrap(() => staffApi.deleteSchedule(id), "Schedule deleted", schedulesQ.refetch),
+      wrap(() => staffApi.updateSchedule(id, b), "Schedule updated"),
+    deleteSchedule: (id: string) => wrap(() => staffApi.deleteSchedule(id), "Schedule deleted"),
   };
 }

@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type Visitor = {
   id: string;
@@ -37,8 +38,13 @@ export const visitorsApi = {
   today: () => http.get<unknown>("/visitors/today?limit=100").then((d) => unwrapList<Visitor>(d, "visitors")),
   list: () => http.get<unknown>("/visitors?limit=100").then((d) => unwrapList<Visitor>(d, "visitors")),
   mine: () => http.get<unknown>("/visitors/my?limit=100").then((d) => unwrapList<Visitor>(d, "visitors")),
-  register: (body: { name: string; phone: string; purpose: string; visit_date: string; room_number: string }) =>
-    http.post<Visitor>("/visitors/register", body),
+  register: async (body: { name: string; phone: string; purpose: string; visit_date: string; room_number: string }) => {
+    const res = await http.post<Visitor>("/visitors/register", body);
+    // Registering is called directly from the student page; invalidate here so
+    // the visitor lists/report reload across screens.
+    invalidateFeature("visitors");
+    return res;
+  },
   checkout: (id: string) => http.patch<Visitor>(`/visitors/${id}/checkout`, { notes: "checked out" }),
   report: (startDate: string, endDate: string) =>
     http
@@ -59,6 +65,7 @@ export function useVisitors(scope: "today" | "all" | "mine" = "today") {
   const q = useAsync(
     () => (scope === "mine" ? visitorsApi.mine() : scope === "all" ? visitorsApi.list() : visitorsApi.today()),
     [scope],
+    { key: scope === "today" ? "visitors:today" : `visitors:${scope}` },
   );
   const [busy, setBusy] = React.useState<string | null>(null);
 
@@ -67,6 +74,7 @@ export function useVisitors(scope: "today" | "all" | "mine" = "today") {
     try {
       await visitorsApi.checkout(id);
       toast.success("Visitor checked out");
+      invalidateFeature("visitors");
       await q.refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -80,6 +88,9 @@ export function useVisitors(scope: "today" | "all" | "mine" = "today") {
 
 export function useVisitorReport(startDate: string, endDate: string) {
   const enabled = !!startDate && !!endDate;
-  const q = useAsync(() => visitorsApi.report(startDate, endDate), [startDate, endDate], { enabled });
+  const q = useAsync(() => visitorsApi.report(startDate, endDate), [startDate, endDate], {
+    enabled,
+    key: "visitors:report",
+  });
   return { report: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
 }

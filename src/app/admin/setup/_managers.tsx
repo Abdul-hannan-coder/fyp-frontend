@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/dashboard/status-badge";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { roomsApi, useRoomsAdmin, type Block, type Floor, type RoomType, type Room, type RoomTypeImage } from "@/lib/features/rooms";
 import { useAmenities, type Amenity } from "@/lib/features/amenities";
+import { invalidateFeature } from "@/lib/cache";
 
 const money = (v: string | number) => `₨ ${Number(v || 0).toLocaleString()}`;
 const setInput = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => setter(e.target.value);
@@ -557,14 +558,14 @@ function RoomPanel({ initial, floors, roomTypes, amenities, onDone, onCancel, re
   const deleteExisting = async (img: RoomTypeImage) => {
     if (!initial?.id) return;
     setImgBusy(img.id);
-    try { await roomsApi.deleteImage(initial.id, img.id); await reloadImages(); toast.success("Photo removed"); }
+    try { await roomsApi.deleteImage(initial.id, img.id); await reloadImages(); invalidateFeature("rooms"); toast.success("Photo removed"); }
     catch (e) { toast.error((e as Error).message); }
     finally { setImgBusy(null); }
   };
   const makePrimary = async (img: RoomTypeImage) => {
     if (!initial?.id) return;
     setImgBusy(img.id);
-    try { await roomsApi.setPrimaryImage(initial.id, img.id); await reloadImages(); }
+    try { await roomsApi.setPrimaryImage(initial.id, img.id); await reloadImages(); invalidateFeature("rooms"); }
     catch (e) { toast.error((e as Error).message); }
     finally { setImgBusy(null); }
   };
@@ -595,6 +596,7 @@ function RoomPanel({ initial, floors, roomTypes, amenities, onDone, onCancel, re
         catch { toast.warning("Saved, but image upload failed — try again from the room page."); }
       }
       toast.success(isEdit ? "Room updated" : "Room created");
+      invalidateFeature("rooms");
       await refetch();
       onDone();
     } catch (err) {

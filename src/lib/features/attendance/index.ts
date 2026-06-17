@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type LeaveRequest = {
   id: string;
@@ -85,8 +86,13 @@ export const attendanceApi = {
   },
   reviewLeave: (id: string, status: "approved" | "rejected") =>
     http.patch<LeaveRequest>(`/admin/leave/requests/${id}`, { status }),
-  markAttendance: (records: { student_id: string; attendance_date: string; status: string }[]) =>
-    http.post<unknown>("/admin/attendance/mark", { records }),
+  markAttendance: async (records: { student_id: string; attendance_date: string; status: string }[]) => {
+    const res = await http.post<unknown>("/admin/attendance/mark", { records });
+    // Marking attendance touches the daily list, per-student history and reports;
+    // invalidate here so the warden page call site reloads connected screens too.
+    invalidateFeature("attendance");
+    return res;
+  },
   // Both endpoints return the JSON attendance/leave report (not a binary file).
   exportAttendance: () => http.get<AttendanceReport>("/admin/attendance/export"),
   leaveReport: () => http.get<AttendanceReport>("/admin/leave/report"),
@@ -112,9 +118,9 @@ function downloadReportCsv(report: AttendanceReport) {
 
 /** Student: leave requests + attendance summary + balances, with apply/cancel actions. */
 export function useMyLeave() {
-  const q = useAsync(() => attendanceApi.myLeave(), []);
-  const summaryQ = useAsync(() => attendanceApi.mySummary(), []);
-  const balanceQ = useAsync(() => attendanceApi.leaveBalance(), []);
+  const q = useAsync(() => attendanceApi.myLeave(), [], { key: "attendance:my:leave" });
+  const summaryQ = useAsync(() => attendanceApi.mySummary(), [], { key: "attendance:my:summary" });
+  const balanceQ = useAsync(() => attendanceApi.leaveBalance(), [], { key: "attendance:my:balance" });
   const [busy, setBusy] = React.useState(false);
 
   const apply = async (body: ApplyLeaveInput) => {
@@ -122,6 +128,7 @@ export function useMyLeave() {
     try {
       await attendanceApi.applyLeave(body);
       toast.success("Leave request submitted");
+      invalidateFeature("attendance");
       await Promise.all([q.refetch(), balanceQ.refetch()]);
       return true;
     } catch (err) {
@@ -137,6 +144,7 @@ export function useMyLeave() {
     try {
       await attendanceApi.cancelLeave(id);
       toast.success("Leave request cancelled");
+      invalidateFeature("attendance");
       await q.refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -158,13 +166,14 @@ export function useMyLeave() {
 }
 
 export function useLeaveReview() {
-  const q = useAsync(() => attendanceApi.leaveRequests(), []);
+  const q = useAsync(() => attendanceApi.leaveRequests(), [], { key: "attendance" });
   const [busy, setBusy] = React.useState<string | null>(null);
   const review = async (id: string, status: "approved" | "rejected") => {
     setBusy(id);
     try {
       await attendanceApi.reviewLeave(id, status);
       toast.success(`Leave ${status}`);
+      invalidateFeature("attendance");
       await q.refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -184,7 +193,7 @@ export function useStudentAttendance(
   const q = useAsync(
     () => attendanceApi.byStudent(studentId as string, params),
     [studentId, JSON.stringify(params ?? {})],
-    { enabled: enabled && !!studentId },
+    { enabled: enabled && !!studentId, key: `attendance:student:${studentId ?? ""}` },
   );
   return { records: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch };
 }

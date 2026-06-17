@@ -31,7 +31,7 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#332151]/40 focus-visible:ring-offset-1",
           active
             ? "border-[#E34F2D] bg-[#E34F2D] text-white"
-            : "border-slate-300 bg-white hover:border-[#E34F2D]/60",
+            : "border-input bg-background hover:border-[#E34F2D]/60",
           className,
         )}
         {...props}

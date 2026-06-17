@@ -31,6 +31,10 @@ export const allocationApi = {
     p.set("limit", "100");
     return http.get<unknown>(`/allocations?${p}`).then((d) => unwrapList<Allocation>(d, "allocations"));
   },
+  getById: (id: string) =>
+    http
+      .get<{ allocation?: Allocation } | Allocation>(`/allocations/${id}`)
+      .then((d) => (d && "allocation" in d ? (d.allocation as Allocation) : (d as Allocation))),
   allocate: (body: AllocateInput) => http.post<Allocation>("/allocations", body),
   // spec 002: admin/warden reserves the room a user already selected at signup.
   reserve: (body: { user_id: string }) =>

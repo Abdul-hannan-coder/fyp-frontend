@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type Announcement = {
   id: string;
@@ -60,7 +61,9 @@ export const announcementsApi = {
 };
 
 export function useAnnouncements(scope: "admin" | "active" = "active") {
-  const q = useAsync(() => (scope === "admin" ? announcementsApi.adminList() : announcementsApi.active()), [scope]);
+  const q = useAsync(() => (scope === "admin" ? announcementsApi.adminList() : announcementsApi.active()), [scope], {
+    key: scope === "admin" ? "announcements:admin" : "announcements",
+  });
   const [busy, setBusy] = React.useState(false);
 
   const create = async (input: CreateAnnouncementInput) => {
@@ -71,6 +74,7 @@ export function useAnnouncements(scope: "admin" | "active" = "active") {
       // Optionally publish immediately so it reaches residents.
       if (publish && created?.id) await announcementsApi.publish(created.id);
       toast.success(publish ? "Announcement published" : "Announcement saved as draft");
+      invalidateFeature("announcements");
       await q.refetch();
       return true;
     } catch (err) {
@@ -85,6 +89,7 @@ export function useAnnouncements(scope: "admin" | "active" = "active") {
     try {
       await announcementsApi.markRead(id);
       toast.success("Marked as read");
+      invalidateFeature("announcements");
       return true;
     } catch (err) {
       toast.error((err as Error).message);

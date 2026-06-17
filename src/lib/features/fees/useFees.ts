@@ -3,11 +3,12 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 import { feesApi, refundsApi, downloadPaymentReceipt, type CreateFeeStructureInput } from "./api";
 import type { CreateRefundInput, PaymentSummary, RecordPaymentInput } from "./types";
 
 export function useFeeStructures() {
-  const q = useAsync(() => feesApi.listStructures(), []);
+  const q = useAsync(() => feesApi.listStructures(), [], { key: "fees:structures" });
   const [busy, setBusy] = React.useState(false);
 
   const create = async (input: CreateFeeStructureInput) => {
@@ -15,7 +16,7 @@ export function useFeeStructures() {
     try {
       await feesApi.createStructure(input);
       toast.success("Fee structure created");
-      await q.refetch();
+      invalidateFeature("fees");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -29,8 +30,11 @@ export function useFeeStructures() {
 }
 
 export function usePayments(params: { student_id?: string; status?: string } = {}) {
-  const key = JSON.stringify(params);
-  const q = useAsync(() => feesApi.listPayments(params), [key]);
+  const paramKey = JSON.stringify(params);
+  const cacheKey = params.student_id
+    ? `fees:student:${params.student_id}`
+    : `fees:payments${params.status ? `:${params.status}` : ""}`;
+  const q = useAsync(() => feesApi.listPayments(params), [paramKey], { key: cacheKey });
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const verify = async (id: string, status: "paid" | "rejected", remarks?: string) => {
@@ -38,7 +42,7 @@ export function usePayments(params: { student_id?: string; status?: string } = {
     try {
       await feesApi.verifyPayment(id, status, remarks);
       toast.success(status === "paid" ? "Payment verified" : "Payment rejected");
-      await q.refetch();
+      invalidateFeature("fees");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -49,8 +53,14 @@ export function usePayments(params: { student_id?: string; status?: string } = {
   return { payments: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch, busyId: busy, verify };
 }
 
+// Admin: a single payment (used by the finance detail page).
+export function usePayment(id: string) {
+  const q = useAsync(() => feesApi.getPayment(id), [id], { key: `fees:${id}`, enabled: !!id });
+  return { payment: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
+}
+
 export function useMyPayments() {
-  const q = useAsync(() => feesApi.myPayments(), []);
+  const q = useAsync(() => feesApi.myPayments(), [], { key: "fees:my" });
   const [submitting, setSubmitting] = React.useState(false);
 
   const pay = async (input: RecordPaymentInput) => {
@@ -58,7 +68,7 @@ export function useMyPayments() {
     try {
       await feesApi.recordPayment(input);
       toast.success("Payment submitted");
-      await q.refetch();
+      invalidateFeature("fees");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -76,7 +86,7 @@ export function useMyPayments() {
       if (transactionId) form.append("transaction_id", transactionId);
       await feesApi.uploadProof(paymentId, form);
       toast.success("Payment proof uploaded — pending verification");
-      await q.refetch();
+      invalidateFeature("fees");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -121,6 +131,7 @@ export function usePaymentAdmin() {
     try {
       const { count } = await feesApi.calculateLateFees();
       toast.success(`Late fees recalculated for ${count} payment(s)`);
+      invalidateFeature("fees");
       await onDone?.();
       return true;
     } catch (err) {
@@ -139,7 +150,7 @@ export function usePaymentProofs(paymentId: string | null) {
   const q = useAsync(
     () => (paymentId ? feesApi.listProofs(paymentId) : Promise.resolve([])),
     [paymentId ?? ""],
-    { enabled: !!paymentId },
+    { key: paymentId ? `fees:proofs:${paymentId}` : undefined, enabled: !!paymentId },
   );
   const [busyId, setBusyId] = React.useState<string | null>(null);
 
@@ -148,7 +159,7 @@ export function usePaymentProofs(paymentId: string | null) {
     try {
       await feesApi.verifyProof(proofId, remarks ? { remarks } : {});
       toast.success("Payment proof verified");
-      await q.refetch();
+      invalidateFeature("fees");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -163,7 +174,7 @@ export function usePaymentProofs(paymentId: string | null) {
     try {
       await feesApi.rejectProof(proofId, { remarks });
       toast.success("Payment proof rejected");
-      await q.refetch();
+      invalidateFeature("fees");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -178,7 +189,7 @@ export function usePaymentProofs(paymentId: string | null) {
 
 // Admin/warden refunds: full list + review (approve/reject) + process workflow + create.
 export function useRefunds() {
-  const q = useAsync(() => refundsApi.list(), []);
+  const q = useAsync(() => refundsApi.list(), [], { key: "refunds" });
   const [busyId, setBusyId] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -187,7 +198,7 @@ export function useRefunds() {
     try {
       await fn();
       toast.success(ok);
-      await q.refetch();
+      invalidateFeature("refunds");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -202,7 +213,7 @@ export function useRefunds() {
     try {
       await refundsApi.create(input);
       toast.success("Refund request created");
-      await q.refetch();
+      invalidateFeature("refunds");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -226,9 +237,15 @@ export function useRefunds() {
   };
 }
 
+// Admin/warden: a single refund (used by the refund detail page).
+export function useRefund(id: string) {
+  const q = useAsync(() => refundsApi.get(id), [id], { key: `refunds:${id}`, enabled: !!id });
+  return { refund: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
+}
+
 // Student refunds: view own requests + request a refund against a paid payment.
 export function useMyRefunds() {
-  const q = useAsync(() => refundsApi.myList(), []);
+  const q = useAsync(() => refundsApi.myList(), [], { key: "refunds:my" });
   const [submitting, setSubmitting] = React.useState(false);
 
   const request = async (input: CreateRefundInput) => {
@@ -236,7 +253,7 @@ export function useMyRefunds() {
     try {
       await refundsApi.create(input);
       toast.success("Refund request submitted");
-      await q.refetch();
+      invalidateFeature("refunds");
       return true;
     } catch (err) {
       toast.error((err as Error).message);

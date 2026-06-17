@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Plus, Trash2, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -559,6 +560,7 @@ function GenerateBillingDialog({
 /* ───────────────────────── Subscriptions ───────────────────────── */
 
 function SubscriptionsTab({ admin }: { admin: ReturnType<typeof useAdminMess> }) {
+  const router = useRouter();
   const { subscriptions, subsLoading, subsError } = admin;
   const activeCount = subscriptions.filter((s) => s.status === "active").length;
 
@@ -597,7 +599,11 @@ function SubscriptionsTab({ admin }: { admin: ReturnType<typeof useAdminMess> })
               </TableHeader>
               <TableBody>
                 {subscriptions.map((s) => (
-                  <TableRow key={s.id}>
+                  <TableRow
+                    key={s.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/admin/mess/${s.id}`)}
+                  >
                     <TableCell className="font-medium">{studentName(s.student)}</TableCell>
                     <TableCell className="text-muted-foreground">{s.messPlan?.name ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">{fmtDate(s.start_date)}</TableCell>

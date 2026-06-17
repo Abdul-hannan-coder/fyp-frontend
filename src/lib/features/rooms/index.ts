@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { http, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 import type { Amenity } from "@/lib/features/amenities";
 
 export type Block = {
@@ -136,17 +137,20 @@ export const roomsApi = {
 };
 
 export function useRoomsAdmin() {
-  const blocksQ = useAsync(() => roomsApi.blocks(), []);
-  const floorsQ = useAsync(() => roomsApi.floors(), []);
-  const typesQ = useAsync(() => roomsApi.roomTypes(), []);
-  const roomsQ = useAsync(() => roomsApi.rooms(), []);
+  const blocksQ = useAsync(() => roomsApi.blocks(), [], { key: "rooms:blocks" });
+  const floorsQ = useAsync(() => roomsApi.floors(), [], { key: "rooms:floors" });
+  const typesQ = useAsync(() => roomsApi.roomTypes(), [], { key: "roomTypes" });
+  const roomsQ = useAsync(() => roomsApi.rooms(), [], { key: "rooms:list" });
   const [busy, setBusy] = React.useState(false);
 
-  const run = async (fn: () => Promise<unknown>, ok: string) => {
+  // `feature` selects which connected keys to invalidate after a successful
+  // mutation so every screen bound to them refetches.
+  const run = async (fn: () => Promise<unknown>, ok: string, feature: "rooms" | "roomTypes") => {
     setBusy(true);
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature(feature);
       await Promise.all([blocksQ.refetch(), floorsQ.refetch(), typesQ.refetch(), roomsQ.refetch()]);
       return true;
     } catch (err) {
@@ -166,25 +170,25 @@ export function useRoomsAdmin() {
     loading: blocksQ.loading || typesQ.loading,
     busy,
     refetch: () => Promise.all([blocksQ.refetch(), floorsQ.refetch(), typesQ.refetch(), roomsQ.refetch()]),
-    createBlock: (b: CreateBlockInput) => run(() => roomsApi.createBlock(b), "Block created"),
-    updateBlock: (id: string, b: Partial<CreateBlockInput>) => run(() => roomsApi.updateBlock(id, b), "Block updated"),
-    deleteBlock: (id: string) => run(() => roomsApi.deleteBlock(id), "Block deleted"),
+    createBlock: (b: CreateBlockInput) => run(() => roomsApi.createBlock(b), "Block created", "rooms"),
+    updateBlock: (id: string, b: Partial<CreateBlockInput>) => run(() => roomsApi.updateBlock(id, b), "Block updated", "rooms"),
+    deleteBlock: (id: string) => run(() => roomsApi.deleteBlock(id), "Block deleted", "rooms"),
     createFloor: (b: { block_id: string; floor_number: number; total_rooms?: number }) =>
-      run(() => roomsApi.createFloor(b), "Floor created"),
+      run(() => roomsApi.createFloor(b), "Floor created", "rooms"),
     updateFloor: (id: string, b: { block_id?: string; floor_number?: number; description?: string }) =>
-      run(() => roomsApi.updateFloor(id, b), "Floor updated"),
-    deleteFloor: (id: string) => run(() => roomsApi.deleteFloor(id), "Floor deleted"),
-    createRoomType: (b: CreateRoomTypeInput) => run(() => roomsApi.createRoomType(b), "Room type created"),
-    updateRoomType: (id: string, b: Partial<CreateRoomTypeInput>) => run(() => roomsApi.updateRoomType(id, b), "Room type updated"),
-    deleteRoomType: (id: string) => run(() => roomsApi.deleteRoomType(id), "Room type deleted"),
-    createRoom: (b: CreateRoomInput) => run(() => roomsApi.createRoom(b), "Room created"),
-    updateRoom: (id: string, b: Partial<CreateRoomInput> & { notes?: string }) => run(() => roomsApi.updateRoom(id, b), "Room updated"),
-    deleteRoom: (id: string) => run(() => roomsApi.deleteRoom(id), "Room deleted"),
+      run(() => roomsApi.updateFloor(id, b), "Floor updated", "rooms"),
+    deleteFloor: (id: string) => run(() => roomsApi.deleteFloor(id), "Floor deleted", "rooms"),
+    createRoomType: (b: CreateRoomTypeInput) => run(() => roomsApi.createRoomType(b), "Room type created", "roomTypes"),
+    updateRoomType: (id: string, b: Partial<CreateRoomTypeInput>) => run(() => roomsApi.updateRoomType(id, b), "Room type updated", "roomTypes"),
+    deleteRoomType: (id: string) => run(() => roomsApi.deleteRoomType(id), "Room type deleted", "roomTypes"),
+    createRoom: (b: CreateRoomInput) => run(() => roomsApi.createRoom(b), "Room created", "rooms"),
+    updateRoom: (id: string, b: Partial<CreateRoomInput> & { notes?: string }) => run(() => roomsApi.updateRoom(id, b), "Room updated", "rooms"),
+    deleteRoom: (id: string) => run(() => roomsApi.deleteRoom(id), "Room deleted", "rooms"),
   };
 }
 
 export function useRooms() {
-  const q = useAsync(() => roomsApi.rooms(), []);
+  const q = useAsync(() => roomsApi.rooms(), [], { key: "rooms:list" });
   const [busy, setBusy] = React.useState<string | null>(null);
 
   const setStatus = async (id: string, status: string) => {
@@ -192,6 +196,7 @@ export function useRooms() {
     try {
       await roomsApi.updateStatus(id, status);
       toast.success(`Room marked ${status}`);
+      invalidateFeature("rooms");
       await q.refetch();
     } catch (err) {
       toast.error((err as Error).message);
@@ -243,7 +248,7 @@ export const packagesApi = {
 };
 
 export function usePackages() {
-  const q = useAsync(() => packagesApi.list(), []);
+  const q = useAsync(() => packagesApi.list(), [], { key: "packages" });
   const [busy, setBusy] = React.useState(false);
 
   const wrap = async (fn: () => Promise<unknown>, ok: string) => {
@@ -251,6 +256,7 @@ export function usePackages() {
     try {
       await fn();
       toast.success(ok);
+      invalidateFeature("packages");
       await q.refetch();
       return true;
     } catch (err) {
@@ -306,17 +312,17 @@ export const roomsDashboardApi = {
 };
 
 export function useRoomsDashboard() {
-  const q = useAsync(() => roomsDashboardApi.dashboard(), []);
+  const q = useAsync(() => roomsDashboardApi.dashboard(), [], { key: "rooms:dashboard" });
   return { dashboard: q.data, loading: q.loading, error: q.error, refetch: q.refetch };
 }
 
 export function useRoomsHierarchy() {
-  const q = useAsync(() => roomsDashboardApi.hierarchy(), []);
+  const q = useAsync(() => roomsDashboardApi.hierarchy(), [], { key: "rooms:hierarchy" });
   return { hierarchy: q.data ?? [], loading: q.loading, error: q.error, refetch: q.refetch };
 }
 
 export function useInspections(roomId: string) {
-  const q = useAsync(() => roomsApi.listInspections(roomId), [roomId]);
+  const q = useAsync(() => roomsApi.listInspections(roomId), [roomId], { key: `rooms:${roomId}:inspections` });
   const [busy, setBusy] = React.useState(false);
 
   const create = async (b: InspectionInput) => {
@@ -324,6 +330,7 @@ export function useInspections(roomId: string) {
     try {
       await roomsApi.createInspection(roomId, b);
       toast.success("Inspection logged");
+      invalidateFeature("rooms");
       await q.refetch();
       return true;
     } catch (err) {

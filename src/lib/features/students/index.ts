@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { API_URL, http, tokenStore, unwrapList } from "@/lib/http";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 
 export type StudentRecord = {
   id: string;
@@ -134,11 +135,12 @@ export const studentsApi = {
 
 /** Loads the signed-in student's own record + emergency contacts, with contact CRUD. */
 export function useMyProfile() {
-  const recordQ = useAsync(() => studentsApi.list(), []);
+  const recordQ = useAsync(() => studentsApi.list(), [], { key: "students" });
   const record = recordQ.data?.[0] ?? null;
 
   const contactsQ = useAsync(() => studentsApi.contacts(record!.id), [record?.id], {
     enabled: !!record?.id,
+    key: record?.id ? `students:${record.id}:contacts` : undefined,
   });
   const [busy, setBusy] = React.useState(false);
 
@@ -148,7 +150,7 @@ export function useMyProfile() {
     try {
       await studentsApi.addContact(record.id, body);
       toast.success("Contact added");
-      await contactsQ.refetch();
+      invalidateFeature("students");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -164,7 +166,7 @@ export function useMyProfile() {
     try {
       await studentsApi.deleteContact(record.id, contactId);
       toast.success("Contact removed");
-      await contactsQ.refetch();
+      invalidateFeature("students");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -181,7 +183,7 @@ export function useMyProfile() {
     try {
       await studentsApi.uploadProfilePhoto(record.id, file);
       toast.success("Profile photo updated");
-      await recordQ.refetch();
+      invalidateFeature("students");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -200,7 +202,7 @@ export function useMyProfile() {
     setBusy(true);
     try {
       await studentsApi.updateProfile(record.id, body);
-      await recordQ.refetch();
+      invalidateFeature("students");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -243,6 +245,7 @@ export function useStudentCsv(onImported?: () => void) {
     try {
       const res = await studentsApi.importCsv(file);
       toast.success(`Imported ${res.imported} of ${res.total}${res.failed ? ` (${res.failed} failed)` : ""}`);
+      invalidateFeature("students");
       onImported?.();
     } catch (err) {
       toast.error((err as Error).message);
@@ -259,11 +262,12 @@ export function useStudentCsv(onImported?: () => void) {
  * Used by the student documents page.
  */
 export function useMyDocuments() {
-  const recordQ = useAsync(() => studentsApi.list(), []);
+  const recordQ = useAsync(() => studentsApi.list(), [], { key: "students" });
   const record = recordQ.data?.[0] ?? null;
 
   const docsQ = useAsync(() => studentsApi.documents(record!.id), [record?.id], {
     enabled: !!record?.id,
+    key: record?.id ? `students:${record.id}:documents` : undefined,
   });
 
   const [busy, setBusy] = React.useState(false);
@@ -281,7 +285,7 @@ export function useMyDocuments() {
       if (documentName) form.append("document_name", documentName);
       await studentsApi.uploadDocument(record.id, form);
       toast.success("Document uploaded");
-      await docsQ.refetch();
+      invalidateFeature("students");
       return true;
     } catch (err) {
       toast.error((err as Error).message);
@@ -297,7 +301,7 @@ export function useMyDocuments() {
     try {
       await studentsApi.deleteDocument(record.id, documentId);
       toast.success("Document removed");
-      await docsQ.refetch();
+      invalidateFeature("students");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {

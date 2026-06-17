@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full">
+    <html lang="en" suppressHydrationWarning className="h-full dark">
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
         <Toaster richColors position="top-right" />

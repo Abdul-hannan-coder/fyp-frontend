@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Check, KeyRound, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -31,16 +32,21 @@ import SimpleSelect from "@/components/ui/simple-select";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { Skeleton, SkeletonTable } from "@/components/ui/skeleton";
 import { useAsync } from "@/lib/useAsync";
-import { useAllocationRequests, useReserveRoom } from "@/lib/features/allocation/useAllocation";
-import type { AllocationRequest } from "@/lib/features/allocation/types";
+import { useAllocationRequests, useAllocations, useReserveRoom } from "@/lib/features/allocation/useAllocation";
+import type { Allocation, AllocationRequest } from "@/lib/features/allocation/types";
 import { usersApi } from "@/lib/features/users/api";
 import type { ManagedUser } from "@/lib/features/users/types";
 
 const nameOf = (r: AllocationRequest) => r.student?.user?.full_name ?? r.student?.student_id ?? "Student";
+const allocNameOf = (a: Allocation) => a.student?.user?.full_name ?? a.student?.student_id ?? "Resident";
+const date = (v?: string | null) => (v ? String(v).slice(0, 10) : "—");
 
 export default function AdminAllocations() {
+  const router = useRouter();
   const { requests, loading, error, review, busyId, refetch } = useAllocationRequests();
+  const { allocations, loading: allocLoading, error: allocError } = useAllocations();
   const [search, setSearch] = React.useState("");
+  const [allocSearch, setAllocSearch] = React.useState("");
   const [selected, setSelected] = React.useState<AllocationRequest | null>(null);
   const [rejecting, setRejecting] = React.useState<AllocationRequest | null>(null);
 
@@ -50,6 +56,11 @@ export default function AdminAllocations() {
   const allocated = all.filter((r) => r.status === "allocated" || r.status === "approved");
 
   const live = selected ? requests.find((r) => r.id === selected.id) ?? selected : null;
+
+  const confirmed = allocations.filter((a) =>
+    allocNameOf(a).toLowerCase().includes(allocSearch.toLowerCase()) ||
+    (a.room?.room_number ?? "").toLowerCase().includes(allocSearch.toLowerCase()),
+  );
 
   return (
     <>
@@ -84,6 +95,52 @@ export default function AdminAllocations() {
             <TabsContent value="allocated"><ReqTable rows={allocated} loading={loading} review={review} busyId={busyId} onView={setSelected} onReject={setRejecting} /></TabsContent>
             <TabsContent value="all"><ReqTable rows={all} loading={loading} review={review} busyId={busyId} onView={setSelected} onReject={setRejecting} /></TabsContent>
           </Tabs>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>Confirmed allocations</CardTitle>
+          </div>
+          <div className="relative w-full max-w-xs">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search resident or room…" className="h-9 pl-9" value={allocSearch} onChange={(e) => setAllocSearch(e.target.value)} />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {allocError && <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{allocError}</div>}
+          {allocLoading && confirmed.length === 0 ? (
+            <SkeletonTable cols={5} />
+          ) : confirmed.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">No confirmed allocations.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Resident</TableHead>
+                  <TableHead>Room</TableHead>
+                  <TableHead>Term</TableHead>
+                  <TableHead>Check-in</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {confirmed.map((a) => (
+                  <TableRow key={a.id} className="cursor-pointer" onClick={() => router.push(`/admin/allocations/${a.id}`)}>
+                    <TableCell>
+                      <p className="font-medium">{allocNameOf(a)}</p>
+                      {a.student?.student_id && <p className="text-xs text-muted-foreground">{a.student.student_id}</p>}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{a.room?.room_number ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{a.academic_year}</TableCell>
+                    <TableCell className="text-muted-foreground">{date(a.check_in_date)}</TableCell>
+                    <TableCell className="text-right"><StatusBadge status={a.status} /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 

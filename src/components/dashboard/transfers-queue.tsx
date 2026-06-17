@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
@@ -29,9 +30,11 @@ const targetOf = (r: RoomTransfer) =>
 
 /** Shared admin/warden room-transfer queue: review (approve/reject) + complete. */
 export function TransfersQueue() {
+  const router = useRouter();
   const { transfers, loading, error, review, complete, busyId } = useTransfers();
   const [search, setSearch] = React.useState("");
   const [rejecting, setRejecting] = React.useState<RoomTransfer | null>(null);
+  const openDetail = (id: string) => router.push(`/admin/transfers/${id}`);
 
   const match = (r: RoomTransfer) =>
     nameOf(r).toLowerCase().includes(search.toLowerCase()) ||
@@ -72,13 +75,13 @@ export function TransfersQueue() {
               <TabsTrigger value="all">All</TabsTrigger>
             </TabsList>
             <TabsContent value="pending">
-              <TransferTable rows={pending} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} />
+              <TransferTable rows={pending} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} onRowClick={openDetail} />
             </TabsContent>
             <TabsContent value="approved">
-              <TransferTable rows={approved} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} />
+              <TransferTable rows={approved} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} onRowClick={openDetail} />
             </TabsContent>
             <TabsContent value="all">
-              <TransferTable rows={all} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} />
+              <TransferTable rows={all} loading={loading} busyId={busyId} onApprove={(id) => review(id, "approved", "Approved")} onReject={setRejecting} onComplete={complete} onRowClick={openDetail} />
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -112,6 +115,7 @@ function TransferTable({
   onApprove,
   onReject,
   onComplete,
+  onRowClick,
 }: {
   rows: RoomTransfer[];
   loading: boolean;
@@ -119,6 +123,7 @@ function TransferTable({
   onApprove: (id: string) => void;
   onReject: (r: RoomTransfer) => void;
   onComplete: (id: string) => void;
+  onRowClick: (id: string) => void;
 }) {
   if (loading) return <SkeletonTable cols={5} />;
   if (rows.length === 0) return <p className="py-10 text-center text-sm text-muted-foreground">No transfers here.</p>;
@@ -136,7 +141,7 @@ function TransferTable({
       </TableHeader>
       <TableBody>
         {rows.map((r) => (
-          <TableRow key={r.id}>
+          <TableRow key={r.id} className="cursor-pointer" onClick={() => onRowClick(r.id)}>
             <TableCell>
               <p className="font-medium">{nameOf(r)}</p>
               {r.student?.student_id && <p className="text-xs text-muted-foreground">{r.student.student_id}</p>}
@@ -150,7 +155,7 @@ function TransferTable({
             </TableCell>
             <TableCell className="max-w-[14rem] truncate text-muted-foreground" title={r.reason}>{r.reason}</TableCell>
             <TableCell><StatusBadge status={r.status} /></TableCell>
-            <TableCell className="text-right">
+            <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
               {r.status === "pending" ? (
                 <div className="flex justify-end gap-1.5">
                   <Button size="icon-sm" variant="outline" className="text-success" disabled={busyId === r.id} onClick={() => onApprove(r.id)}>

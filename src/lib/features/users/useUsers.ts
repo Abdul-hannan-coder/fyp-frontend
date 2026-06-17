@@ -3,12 +3,13 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { useAsync } from "@/lib/useAsync";
+import { invalidateFeature } from "@/lib/cache";
 import { usersApi, type CreateAccountInput } from "./api";
 import type { UserFilters } from "./types";
 
 export function useUsers(filters: UserFilters = {}) {
   const key = JSON.stringify(filters);
-  const q = useAsync(() => usersApi.list(filters), [key]);
+  const q = useAsync(() => usersApi.list(filters), [key], { key: "users" });
   const [busy, setBusy] = React.useState<string | null>(null);
   const [creating, setCreating] = React.useState(false);
 
@@ -17,7 +18,7 @@ export function useUsers(filters: UserFilters = {}) {
     try {
       await fn();
       toast.success(ok);
-      await q.refetch();
+      invalidateFeature("users");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -30,7 +31,7 @@ export function useUsers(filters: UserFilters = {}) {
     try {
       const user = await usersApi.create(input);
       toast.success(`${input.role_name} account created — credentials emailed`);
-      await q.refetch();
+      invalidateFeature("users");
       return user;
     } catch (err) {
       const e = err as { message: string; errors?: { message: string }[] };
