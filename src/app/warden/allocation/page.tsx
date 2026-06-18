@@ -81,7 +81,7 @@ export default function WardenAllocation() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="pending">
+          <Tabs defaultValue="all">
             <TabsList className="mb-4">
               <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
               <TabsTrigger value="all">All</TabsTrigger>

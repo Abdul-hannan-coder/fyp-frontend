@@ -68,7 +68,7 @@ export function TransfersQueue() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="pending">
+          <Tabs defaultValue="all">
             <TabsList className="mb-4">
               <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
               <TabsTrigger value="approved">Approved ({approved.length})</TabsTrigger>

@@ -85,7 +85,7 @@ export default function AdminAllocations() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="pending">
+          <Tabs defaultValue="all">
             <TabsList className="mb-4">
               <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="allocated">Allocated</TabsTrigger>

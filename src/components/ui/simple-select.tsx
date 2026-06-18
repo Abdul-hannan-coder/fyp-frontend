@@ -72,6 +72,11 @@ export default function Select({ value, options, onChange, placeholder, classNam
         createPortal(
           <div
             ref={menuRef}
+            // Stop pointer/mouse events from reaching document so a parent Radix
+            // Dialog/Popover doesn't treat selecting an option as a click-outside
+            // (which would close the modal instead of choosing the value).
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: coords.top, left: coords.left, width: coords.width, zIndex: 200 }}
             className="rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl p-1.5 max-h-64 overflow-y-auto no-scrollbar"
           >
