@@ -72,13 +72,10 @@ export default function Select({ value, options, onChange, placeholder, classNam
         createPortal(
           <div
             ref={menuRef}
-            // Keep selection working inside a Radix Dialog/Popover:
-            // - stopPropagation: the dialog never sees a "pointer-down outside".
-            // - preventDefault on mousedown: focus stays in the dialog, so the
-            //   dialog's "focus outside" guard doesn't fire either.
-            // The option's onClick still runs, so the value is chosen and the
-            // modal stays open.
-            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            // Stop pointer events from reaching document so a parent Radix
+            // Dialog/Popover never treats interacting with the menu as a
+            // "click outside" (which would close the modal).
+            onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             style={{ position: "fixed", top: coords.top, left: coords.left, width: coords.width, zIndex: 200 }}
             className="rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl p-1.5 max-h-64 overflow-y-auto no-scrollbar"
@@ -89,7 +86,11 @@ export default function Select({ value, options, onChange, placeholder, classNam
                 <button
                   key={o.value}
                   type="button"
-                  onClick={() => { onChange(o.value); setOpen(false); }}
+                  // Select on mousedown (like react-select): fires before focus
+                  // moves and before any dialog dismiss logic. preventDefault
+                  // keeps focus inside the dialog so its "focus outside" guard
+                  // never fires. This makes selection reliable inside modals.
+                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onChange(o.value); setOpen(false); }}
                   className={`w-full text-left px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between gap-2 transition-colors cursor-pointer mb-0.5 last:mb-0 ${
                     active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-accent"
                   }`}
