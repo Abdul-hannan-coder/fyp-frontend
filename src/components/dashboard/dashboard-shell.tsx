@@ -1,4 +1,3 @@
-import { HeaderNotifications } from "@/components/dashboard/header-notifications";
 import { AccountMenu } from "@/components/dashboard/account-menu";
 import { ModernSidebar } from "@/components/ui/modern-side-bar";
 import { ROLE_META, type Role } from "@/lib/nav";
@@ -23,7 +22,6 @@ export function DashboardShell({
             <p className="text-xs text-muted-foreground">{meta.description}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <HeaderNotifications />
             <AccountMenu />
           </div>
         </header>
