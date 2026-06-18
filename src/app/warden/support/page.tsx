@@ -33,7 +33,7 @@ import { SkeletonTable } from "@/components/ui/skeleton";
 
 const priorityColor: Record<string, string> = {
   high: "bg-destructive/12 text-destructive border-destructive/25",
-  medium: "bg-warning/15 text-gold-foreground border-warning/30",
+  medium: "bg-warning/15 text-warning border-warning/30",
   low: "bg-muted text-muted-foreground",
 };
 

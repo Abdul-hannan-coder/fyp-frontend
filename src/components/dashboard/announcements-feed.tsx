@@ -35,7 +35,7 @@ export function AnnouncementsFeed({
               <div className="flex items-center gap-2">
                 <p className="font-medium">{a.title}</p>
                 {a.is_pinned && (
-                  <Badge variant="outline" className="gap-1 border-warning/30 bg-warning/10 text-gold-foreground">
+                  <Badge variant="outline" className="gap-1 border-warning/30 bg-warning/10 text-warning">
                     <Pin className="size-3" /> Pinned
                   </Badge>
                 )}

@@ -116,7 +116,7 @@ export function ApplicationsList({ actions }: { actions: UsersActions }) {
                 <p className="font-medium">{a.full_name}</p>
                 {a.is_verified
                   ? <Badge variant="outline" className="border-success/25 bg-success/12 text-success">Email verified</Badge>
-                  : <Badge variant="outline" className="border-warning/30 bg-warning/10 text-gold-foreground">Verifies after login</Badge>}
+                  : <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">Verifies after login</Badge>}
               </div>
               <p className="text-xs text-muted-foreground">{a.email}</p>
               {a.phone && <p className="text-xs text-muted-foreground">{a.phone}</p>}

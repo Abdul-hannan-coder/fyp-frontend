@@ -188,7 +188,7 @@ export default function AdminUserDetail() {
                 <StatusBadge status={statusOf(user)} />
                 {user.is_verified
                   ? <Badge variant="outline" className="border-success/25 bg-success/12 text-success">Email verified</Badge>
-                  : <Badge variant="outline" className="border-warning/30 bg-warning/10 text-gold-foreground">Verifies after login</Badge>}
+                  : <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">Verifies after login</Badge>}
               </div>
             </div>
             <div className="space-y-2 text-sm sm:ml-auto sm:text-left">

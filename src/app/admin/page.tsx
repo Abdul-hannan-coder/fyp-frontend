@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         title={`Welcome back${user?.full_name ? `, ${user.full_name.split(" ")[0]}` : ""}`}
         description="Your hostel at a glance — and everything that needs you today."
       >
-        <Button variant="outline" onClick={refreshAll}>
+        <Button variant="outline" size="sm" onClick={refreshAll}>
           <RefreshCw className="size-4" /> Refresh
         </Button>
       </PageHeader>

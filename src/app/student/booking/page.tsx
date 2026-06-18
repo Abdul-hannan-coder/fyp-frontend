@@ -129,7 +129,7 @@ export default function StudentBooking() {
                     {allocation ? ` · ${allocation.academic_year}` : ""}
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1 text-xs font-medium text-gold-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 px-3 py-1 text-xs font-medium text-warning">
                   <Clock className="size-3.5" />
                   {confirmed ? "Active" : awaitingApproval ? "Pending approval" : "Reserved"}
                 </span>

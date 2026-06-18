@@ -21,16 +21,11 @@ const money = (v: string | number) => `₨ ${Number(v || 0).toLocaleString()}`;
 const setInput = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => setter(e.target.value);
 
 // ── Shared chrome ─────────────────────────────────────────────────────────
-function SectionHead({ title, subtitle, action }: { title: string; subtitle?: string; action: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h2 className="font-heading text-lg font-semibold">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
-      </div>
-      {action}
-    </div>
-  );
+// The page-level <PageHeader> now owns the title/breadcrumb, so this just holds
+// the manager's Add action (right-aligned). title/subtitle are accepted but
+// unused to keep the existing call sites simple.
+function SectionHead({ action }: { title?: string; subtitle?: string; action: React.ReactNode }) {
+  return <div className="-mt-1 mb-1 flex justify-end">{action}</div>;
 }
 
 function AddButton({ open, onClick, disabled, hint }: { open: boolean; onClick: () => void; disabled?: boolean; hint?: string }) {

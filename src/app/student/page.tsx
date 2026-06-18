@@ -175,7 +175,7 @@ export default function StudentDashboard() {
           <CardContent className="space-y-3">
             {nextDue && (
               <div className="rounded-xl border border-warning/30 bg-warning/10 p-4">
-                <p className="text-xs font-medium text-gold-foreground">Next payment due</p>
+                <p className="text-xs font-medium text-warning">Next payment due</p>
                 <p className="mt-1 font-heading text-2xl font-semibold">
                   {money(Number(nextDue.total_amount) - Number(nextDue.amount_paid))}
                 </p>

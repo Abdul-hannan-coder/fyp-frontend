@@ -158,7 +158,7 @@ export default function AdminFinance() {
             <CardTitle>Payment verifications</CardTitle>
             <CardDescription>{pending.length} payment(s) awaiting review</CardDescription>
           </div>
-          <Badge variant="outline" className="border-warning/30 bg-warning/10 text-gold-foreground">Action needed</Badge>
+          <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">Action needed</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           {loading ? (
